@@ -10,7 +10,6 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
@@ -39,12 +38,10 @@ class SystemLogsPage extends Page implements HasActions, HasSchemas, HasTable
 
     public ?array $data = [];
 
-    /** @var array<int, array{file: string, line: int, text: string}> */
-    public array $searchResults = [];
+    /** @var array<int, array{file: string, time: string, level: string, message: string, detail: string}> */
+    public array $entries = [];
 
-    public bool $searchTruncated = false;
-
-    public bool $hasSearched = false;
+    public int $entriesLimit = 100;
 
     public static function getNavigationGroup(): ?string
     {
@@ -53,50 +50,58 @@ class SystemLogsPage extends Page implements HasActions, HasSchemas, HasTable
 
     public function mount(): void
     {
-        $this->form->fill(['keyword' => '', 'level' => null]);
+        $this->entriesLimit = max(1, (int) config('nova-site-core.logs.search_limit', 100));
+
+        $this->form->fill(['file' => null, 'keyword' => '', 'level' => null]);
+        $this->loadEntries();
     }
 
     public function form(Schema $schema): Schema
     {
         return $schema
             ->components([
-                Section::make('搜索日志')
-                    ->description('对全部日志文件逐行全文检索，不受「查看」仅显示尾部的限制')
-                    ->schema([
-                        TextInput::make('keyword')
-                            ->label('关键字')
-                            ->placeholder('如：异常类名、请求路径、订单号'),
-                        Select::make('level')
-                            ->label('级别')
-                            ->options([
-                                'ERROR'   => 'ERROR',
-                                'WARNING' => 'WARNING',
-                                'INFO'    => 'INFO',
-                                'DEBUG'   => 'DEBUG',
-                            ])
-                            ->placeholder('全部'),
+                Select::make('file')
+                    ->label('日志文件')
+                    ->options(fn (): array => app(LogFileService::class)->files()
+                        ->mapWithKeys(fn (array $f): array => [md5($f['path']) => $f['name']])
+                        ->all())
+                    ->placeholder('全部文件'),
+                TextInput::make('keyword')
+                    ->label('关键字')
+                    ->placeholder('匹配条目全文（含堆栈），如异常类名、请求路径'),
+                Select::make('level')
+                    ->label('级别')
+                    ->options([
+                        'ERROR'   => 'ERROR',
+                        'WARNING' => 'WARNING',
+                        'INFO'    => 'INFO',
+                        'DEBUG'   => 'DEBUG',
                     ])
-                    ->columns(2),
+                    ->placeholder('全部'),
             ])
+            ->columns(3)
             ->statePath('data');
     }
 
-    public function runSearch(): void
+    public function loadEntries(): void
     {
-        $keyword = trim((string) ($this->data['keyword'] ?? ''));
-        $level = $this->data['level'] ?? null;
+        $this->entries = app(LogFileService::class)->entries(
+            path: $this->selectedPath(),
+            keyword: trim((string) ($this->data['keyword'] ?? '')),
+            level: $this->data['level'] ?? null,
+        );
+    }
 
-        if ($keyword === '' && blank($level)) {
-            Notification::make()->title('请输入关键字或选择级别')->warning()->send();
-
-            return;
+    /** 文件下拉用 md5 作 value，避免把服务器绝对路径暴露到前端 */
+    protected function selectedPath(): ?string
+    {
+        $key = $this->data['file'] ?? null;
+        if (blank($key)) {
+            return null;
         }
 
-        $result = app(LogFileService::class)->search($keyword, blank($level) ? null : $level);
-
-        $this->searchResults = $result['matches'];
-        $this->searchTruncated = $result['truncated'];
-        $this->hasSearched = true;
+        return app(LogFileService::class)->files()
+            ->first(fn (array $f): bool => md5($f['path']) === $key)['path'] ?? null;
     }
 
     public function table(Table $table): Table
@@ -119,14 +124,10 @@ class SystemLogsPage extends Page implements HasActions, HasSchemas, HasTable
                 Action::make('view')
                     ->label('查看')
                     ->icon(Heroicon::OutlinedEye)
-                    ->modalHeading(fn (array $record): string => $record['name'])
-                    ->modalWidth('5xl')
-                    ->modalContent(fn (array $record) => view(
-                        'nova-site-core::filament.pages.log-tail',
-                        app(LogFileService::class)->tail($record['path'])
-                    ))
-                    ->modalSubmitAction(false)
-                    ->modalCancelActionLabel('关闭'),
+                    ->action(function (array $record): void {
+                        $this->data['file'] = md5($record['path']);
+                        $this->loadEntries();
+                    }),
                 Action::make('download')
                     ->label('下载')
                     ->icon(Heroicon::OutlinedArrowDownTray)
@@ -150,6 +151,10 @@ class SystemLogsPage extends Page implements HasActions, HasSchemas, HasTable
 
                         Notification::make()->title('日志已删除')->success()->send();
 
+                        if (($this->data['file'] ?? null) === md5($record['path'])) {
+                            $this->data['file'] = null;
+                        }
+                        $this->loadEntries();
                         $this->resetTable();
                     }),
             ]);

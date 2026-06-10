@@ -88,8 +88,8 @@ return [
         'enabled'      => true,
         'paths'        => [],      // 空 = [storage_path('logs')]
         'pattern'      => '*.log',
-        'view_tail_kb' => 256,     // 「查看」弹窗读取的尾部大小
-        'search_limit' => 200,     // 全文搜索返回的最大命中行数
+        'view_tail_kb' => 256,     // 无筛选浏览时每个文件读取的尾部大小
+        'search_limit' => 100,     // 浏览/检索展示的最大条目数
     ],
 
     /*
