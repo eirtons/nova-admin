@@ -81,11 +81,13 @@ return [
     |--------------------------------------------------------------------------
     | 后台布局
     |--------------------------------------------------------------------------
-    | max_content_width 支持 \Filament\Support\Enums\Width 枚举或 CSS 值；
-    | 默认内容区全宽 + 侧边栏 16rem（Filament 默认 7xl + 20rem 大屏右侧留白明显）。
+    | 侧边栏默认收窄至 16rem（Filament 默认 20rem 偏宽）。
+    | max_content_width 默认 null = Filament 默认上限（表单页协调）；
+    | 需要全局放宽时可设 \Filament\Support\Enums\Width 枚举或 CSS 值，
+    | 系统日志等需要大空间的页面已自行覆盖为全宽。
     */
     'layout' => [
-        'max_content_width' => \Filament\Support\Enums\Width::Full,
+        'max_content_width' => null,
         'sidebar_width'     => '16rem',
     ],
 

@@ -13,6 +13,7 @@ use Filament\Pages\Page;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -36,6 +37,9 @@ class SystemLogsPage extends Page implements HasActions, HasSchemas, HasTable
 
     protected string $view = 'nova-site-core::filament.pages.system-logs';
 
+    /** 日志条目偏长，本页放开为全宽（其他页面保持默认宽度） */
+    protected Width|string|null $maxContentWidth = Width::Full;
+
     public ?array $data = [];
 
     /** @var array<int, array{file: string, time: string, level: string, message: string, detail: string}> */
@@ -52,7 +56,14 @@ class SystemLogsPage extends Page implements HasActions, HasSchemas, HasTable
     {
         $this->entriesLimit = max(1, (int) config('nova-site-core.logs.search_limit', 100));
 
-        $this->form->fill(['file' => null, 'keyword' => '', 'level' => null]);
+        // 默认只看最新的一个文件，避免打开页面就全量查询；下拉可手动切「全部文件」
+        $latest = app(LogFileService::class)->files()->first();
+
+        $this->form->fill([
+            'file'    => $latest !== null ? md5($latest['path']) : null,
+            'keyword' => '',
+            'level'   => null,
+        ]);
         $this->loadEntries();
     }
 

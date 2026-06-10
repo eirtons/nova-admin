@@ -45,7 +45,11 @@
         @endif
     </x-filament::section>
 
-    {{ $this->table }}
+    <x-filament::section collapsible collapsed>
+        <x-slot name="heading">日志文件管理（下载 / 删除 / 切换查看）</x-slot>
+
+        {{ $this->table }}
+    </x-filament::section>
 
     <x-filament-actions::modals />
 </x-filament-panels::page>
