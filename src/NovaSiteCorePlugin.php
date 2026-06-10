@@ -116,11 +116,12 @@ class NovaSiteCorePlugin implements Plugin
             <script>
             (function () {
                 function bindLogoLink() {
-                    var header = document.querySelector('.fi-sidebar-header');
-                    var el = header ? header.querySelector('a') : null;
+                    // Filament v5：品牌为 .fi-logo（div），外层 <a> 才是链接（顶栏或侧边栏头部）
+                    var logo = document.querySelector('.fi-logo');
+                    var el = logo ? logo.closest('a') : null;
                     if (! el) {
-                        el = document.querySelector('.fi-logo')
-                            || document.querySelector('.fi-sidebar-nav a');
+                        el = document.querySelector('.fi-topbar-start a')
+                            || document.querySelector('.fi-sidebar-header a');
                     }
                     if (el) {
                         el.setAttribute('href', '{$url}');
