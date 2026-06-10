@@ -1,0 +1,106 @@
+<?php
+
+namespace Nbutl\NovaSiteCore\Filament\Pages;
+
+use BackedEnum;
+use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
+use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Nbutl\NovaSiteCore\Services\SiteConfigService;
+
+class SiteSettingsPage extends Page implements HasSchemas
+{
+    use InteractsWithSchemas;
+
+    protected static ?string $title = '站点设置';
+
+    protected static ?string $navigationLabel = '站点设置';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCog6Tooth;
+
+    protected string $view = 'nova-site-core::filament.pages.site-settings';
+
+    public ?array $data = [];
+
+    /** 字段 => [label, group] */
+    protected array $fields = [
+        'site_name'           => ['站点名称', 'basic'],
+        'subtitle'            => ['副标题', 'basic'],
+        'copyright'           => ['版权', 'basic'],
+        'contact_email'       => ['联系邮箱', 'basic'],
+        'meta_title_template' => ['标题模板', 'seo'],
+        'meta_description'    => ['Meta 描述', 'seo'],
+        'meta_keywords'       => ['Meta 关键词', 'seo'],
+        'favicon_path'        => ['Favicon 路径', 'media'],
+        'logo_path'           => ['Logo 路径', 'media'],
+        'brand_color'         => ['品牌色', 'brand'],
+    ];
+
+    public static function getNavigationGroup(): ?string
+    {
+        return config('nova-site-core.navigation.group');
+    }
+
+    public function mount(): void
+    {
+        $config = app(SiteConfigService::class);
+
+        $this->form->fill(
+            collect($this->fields)
+                ->mapWithKeys(fn ($meta, $key) => [
+                    $key => $config->get($key, config("nova-site-core.site_defaults.$key", '')),
+                ])
+                ->all()
+        );
+    }
+
+    public function form(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                Section::make('基础信息')->schema($this->fieldsFor('basic'))->columns(2),
+                Section::make('SEO 配置')->schema($this->fieldsFor('seo'))->columns(1),
+                Section::make('媒体资源')->schema($this->fieldsFor('media'))->columns(2),
+                Section::make('品牌')->schema($this->fieldsFor('brand')),
+            ])
+            ->statePath('data');
+    }
+
+    protected function fieldsFor(string $group): array
+    {
+        $components = [];
+
+        foreach ($this->fields as $key => [$label, $g]) {
+            if ($g !== $group) {
+                continue;
+            }
+
+            $components[] = match (true) {
+                $key === 'brand_color'      => ColorPicker::make($key)->label($label),
+                $key === 'meta_description' => Textarea::make($key)->label($label)->rows(3),
+                default                     => TextInput::make($key)->label($label),
+            };
+        }
+
+        return $components;
+    }
+
+    public function save(): void
+    {
+        $config = app(SiteConfigService::class);
+        $state = $this->form->getState();
+
+        foreach ($this->fields as $key => [$label, $group]) {
+            $config->set($key, $state[$key] ?? null, 'string', $group);
+        }
+
+        Notification::make()->title('站点设置已保存')->success()->send();
+    }
+}
