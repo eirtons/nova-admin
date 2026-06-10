@@ -63,6 +63,54 @@ class LogFileService
         return ['content' => $content, 'truncated' => $truncated, 'tail_kb' => $kb];
     }
 
+    /**
+     * 全文搜索：流式逐行扫描所有日志文件（按更新时间倒序），命中数达上限即停。
+     * $keyword 为空时仅按级别过滤；$level 匹配 "local.ERROR:" 形式的级别标记。
+     *
+     * @return array{matches: array<int, array{file: string, line: int, text: string}>, truncated: bool}
+     */
+    public function search(string $keyword, ?string $level = null, ?int $limit = null): array
+    {
+        $limit ??= max(1, (int) config('nova-site-core.logs.search_limit', 200));
+        $matches = [];
+        $truncated = false;
+
+        foreach ($this->files() as $file) {
+            $fp = fopen($file['path'], 'rb');
+            $lineNo = 0;
+
+            while (($line = fgets($fp)) !== false) {
+                $lineNo++;
+
+                if ($keyword !== '' && stripos($line, $keyword) === false) {
+                    continue;
+                }
+                if ($level !== null && stripos($line, ".{$level}:") === false) {
+                    continue;
+                }
+
+                $matches[] = [
+                    'file' => $file['name'],
+                    'line' => $lineNo,
+                    'text' => mb_strimwidth(rtrim($line), 0, 500, '…'),
+                ];
+
+                if (count($matches) >= $limit) {
+                    $truncated = true;
+                    break;
+                }
+            }
+
+            fclose($fp);
+
+            if ($truncated) {
+                break;
+            }
+        }
+
+        return ['matches' => $matches, 'truncated' => $truncated];
+    }
+
     public function delete(string $path): void
     {
         $this->assertManaged($path);

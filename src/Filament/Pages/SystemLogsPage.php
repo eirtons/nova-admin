@@ -6,10 +6,14 @@ use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -33,9 +37,66 @@ class SystemLogsPage extends Page implements HasActions, HasSchemas, HasTable
 
     protected string $view = 'nova-site-core::filament.pages.system-logs';
 
+    public ?array $data = [];
+
+    /** @var array<int, array{file: string, line: int, text: string}> */
+    public array $searchResults = [];
+
+    public bool $searchTruncated = false;
+
+    public bool $hasSearched = false;
+
     public static function getNavigationGroup(): ?string
     {
         return config('nova-site-core.navigation.group');
+    }
+
+    public function mount(): void
+    {
+        $this->form->fill(['keyword' => '', 'level' => null]);
+    }
+
+    public function form(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                Section::make('搜索日志')
+                    ->description('对全部日志文件逐行全文检索，不受「查看」仅显示尾部的限制')
+                    ->schema([
+                        TextInput::make('keyword')
+                            ->label('关键字')
+                            ->placeholder('如：异常类名、请求路径、订单号'),
+                        Select::make('level')
+                            ->label('级别')
+                            ->options([
+                                'ERROR'   => 'ERROR',
+                                'WARNING' => 'WARNING',
+                                'INFO'    => 'INFO',
+                                'DEBUG'   => 'DEBUG',
+                            ])
+                            ->placeholder('全部'),
+                    ])
+                    ->columns(2),
+            ])
+            ->statePath('data');
+    }
+
+    public function runSearch(): void
+    {
+        $keyword = trim((string) ($this->data['keyword'] ?? ''));
+        $level = $this->data['level'] ?? null;
+
+        if ($keyword === '' && blank($level)) {
+            Notification::make()->title('请输入关键字或选择级别')->warning()->send();
+
+            return;
+        }
+
+        $result = app(LogFileService::class)->search($keyword, blank($level) ? null : $level);
+
+        $this->searchResults = $result['matches'];
+        $this->searchTruncated = $result['truncated'];
+        $this->hasSearched = true;
     }
 
     public function table(Table $table): Table

@@ -89,6 +89,7 @@ return [
         'paths'        => [],      // 空 = [storage_path('logs')]
         'pattern'      => '*.log',
         'view_tail_kb' => 256,     // 「查看」弹窗读取的尾部大小
+        'search_limit' => 200,     // 全文搜索返回的最大命中行数
     ],
 
     /*
