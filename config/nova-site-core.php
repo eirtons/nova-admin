@@ -79,6 +79,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | sitemap.xml
+    |--------------------------------------------------------------------------
+    | robots.txt 默认模板指向 /sitemap.xml，由本包路由输出（项目自带 sitemap 时
+    | 置 enabled=false）。urls 为静态条目；动态内容在项目 ServiceProvider::boot 注册：
+    |   Sitemap::register(fn () => Article::published()->get()
+    |       ->map(fn ($a) => ['loc' => route('articles.show', $a), 'lastmod' => $a->updated_at]));
+    */
+    'sitemap' => [
+        'enabled'   => true,
+        'cache_ttl' => env('NOVA_SITEMAP_CACHE_TTL', 1800), // 秒；0 = 不缓存
+        'cache_key' => 'nova_site_core:sitemap',
+        'urls'      => [
+            ['loc' => '/', 'changefreq' => 'daily', 'priority' => '1.0'],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | 站点设置默认值
     |--------------------------------------------------------------------------
     | install 时写入 site_configs；站点设置页未保存过的字段也用它预填。

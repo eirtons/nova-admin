@@ -124,6 +124,7 @@ php artisan serve
 | 站点设置（基础/SEO/媒体/品牌） | 后台「站点设置」 |
 | ads.txt 编辑 | 后台「Ads.txt」+ `GET /ads.txt` |
 | robots.txt 编辑（含默认模板） | 后台「Robots.txt」+ `GET /robots.txt` |
+| sitemap.xml（静态条目 + 项目注册动态来源，带缓存） | `GET /sitemap.xml` |
 | 账号密码登录 | `/admin/login`（账号字段可配） |
 | 后台中文 | 自动 |
 | 默认管理员 | `nova / nova` |
@@ -132,8 +133,10 @@ php artisan serve
 > robots.txt / ads.txt 默认 `both` 模式：保存时写 `public/` 静态文件（web server 直出最快），
 > 同时存数据库；文件不存在或只读时由路由兜底动态输出。
 > 注意 Laravel 自带的 `public/robots.txt` 会优先于路由——`nova-site-core:install` 安装时会自动
-> 用默认模板（`User-agent: * / Allow: / / Disallow: /admin` + 按 `APP_URL` 域名生成的 `Sitemap`）覆盖它；
+> 用默认模板（`User-agent: * / Allow: / / Disallow: /admin` + `Sitemap`）覆盖它；
 > 后台编辑框未保存过时也会预填该模板。
+> 内容支持 `{url}` 占位符（= 当前请求域名）：数据库存占位符，路由输出与后台编辑框按当前域名
+> 动态解析，写静态文件时按写入时刻的域名解析（install 时为 `APP_URL`）。
 
 ---
 
@@ -157,6 +160,25 @@ SiteConfig::get('site_name', 'default');
 SiteConfig::set('site_name', 'My Site');         // string
 SiteConfig::set('ads_enabled', true, 'boolean'); // 按 type 存取
 ```
+
+### Sitemap
+
+包自带 `GET /sitemap.xml`（robots.txt 默认模板已指向它）。静态条目在 config
+`nova-site-core.sitemap.urls` 配置；动态内容在项目 `AppServiceProvider::boot` 注册：
+
+```php
+use Nbutl\NovaSiteCore\Facades\Sitemap;
+
+Sitemap::register(fn () => Article::published()->get()->map(fn ($a) => [
+    'loc'      => route('articles.show', $a),
+    'lastmod'  => $a->updated_at,          // 可选，DateTime 或字符串
+    'priority' => '0.7',                   // 可选；changefreq 同理
+]));
+```
+
+输出带缓存（`sitemap.cache_ttl`，默认 1800 秒），内容更新后可执行
+`php artisan nova-site-core:clear-cache` 立即刷新；项目自带 sitemap 时置
+`sitemap.enabled = false` 关闭包路由。
 
 ---
 
@@ -212,6 +234,10 @@ php artisan livewire:publish --assets   # Livewire JS → public/vendor/livewire
 ```
 
 并确保 `public/vendor/livewire` 归属 web 用户（如 `chown -R www:www public/vendor/livewire`）。
+
+站点设置的 Favicon / Logo 上传存储在 `storage/app/public/site/`，需要 storage 软链
+（`nova-site-core:install` 已自动创建；手动执行 `php artisan storage:link`），
+并保证 `storage/` 归属 web 用户、软链 `public/storage` 随站点一起部署。
 若生产启用了 `opcache.validate_timestamps=0`，更新后还需 reload php-fpm 重置 OPcache。
 
 > 完整可参考 webdeploy 的 `deploy-scripts/worldcup-news/create.sh` / `update.sh`。

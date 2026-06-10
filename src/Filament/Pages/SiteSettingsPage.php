@@ -4,6 +4,7 @@ namespace Nbutl\NovaSiteCore\Filament\Pages;
 
 use BackedEnum;
 use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
@@ -38,8 +39,8 @@ class SiteSettingsPage extends Page implements HasSchemas
         'meta_title_template' => ['标题模板', 'seo'],
         'meta_description'    => ['Meta 描述', 'seo'],
         'meta_keywords'       => ['Meta 关键词', 'seo'],
-        'favicon_path'        => ['Favicon 路径', 'media'],
-        'logo_path'           => ['Logo 路径', 'media'],
+        'favicon_path'        => ['Favicon', 'media'],
+        'logo_path'           => ['Logo', 'media'],
         'brand_color'         => ['品牌色', 'brand'],
     ];
 
@@ -54,9 +55,12 @@ class SiteSettingsPage extends Page implements HasSchemas
 
         $this->form->fill(
             collect($this->fields)
-                ->mapWithKeys(fn ($meta, $key) => [
-                    $key => $config->get($key, config("nova-site-core.site_defaults.$key", '')),
-                ])
+                ->mapWithKeys(function ($meta, $key) use ($config) {
+                    $value = $config->get($key, config("nova-site-core.site_defaults.$key"));
+
+                    // FileUpload 等组件用 null 表示"未设置"，空字符串会被当作已有文件路径
+                    return [$key => blank($value) ? null : $value];
+                })
                 ->all()
         );
     }
@@ -83,6 +87,20 @@ class SiteSettingsPage extends Page implements HasSchemas
             }
 
             $components[] = match (true) {
+                $key === 'favicon_path'     => FileUpload::make($key)
+                    ->label($label)
+                    ->helperText('支持 .ico / .png / .svg，为空则使用浏览器默认图标')
+                    ->disk('public')
+                    ->directory('site')
+                    ->acceptedFileTypes(['image/x-icon', 'image/png', 'image/svg+xml'])
+                    ->nullable(),
+                $key === 'logo_path'        => FileUpload::make($key)
+                    ->label($label)
+                    ->helperText('上传后在导航栏展示，未上传则不显示')
+                    ->disk('public')
+                    ->directory('site')
+                    ->image()
+                    ->nullable(),
                 $key === 'brand_color'      => ColorPicker::make($key)->label($label),
                 $key === 'meta_description' => Textarea::make($key)->label($label)->rows(3),
                 default                     => TextInput::make($key)->label($label),

@@ -31,10 +31,10 @@ class PublicTextFileService
 
         $fromDb = $this->config->get($conf['config_key']);
         if (is_string($fromDb) && trim($fromDb) !== '') {
-            return $fromDb;
+            return $this->resolvePlaceholders($fromDb);
         }
 
-        return $this->defaultTemplate($type);
+        return $this->resolvePlaceholders($this->defaultTemplate($type));
     }
 
     /**
@@ -101,7 +101,16 @@ class PublicTextFileService
             return;
         }
 
-        File::put($path, $content.PHP_EOL);
+        File::put($path, $this->resolvePlaceholders($content).PHP_EOL);
+    }
+
+    /**
+     * 解析内容占位符：{url} = 当前请求域名（CLI 下为 APP_URL）。
+     * 数据库存占位符、文件与输出存解析结果，域名变化无需改内容。
+     */
+    public function resolvePlaceholders(string $content): string
+    {
+        return str_replace('{url}', rtrim(url('/'), '/'), $content);
     }
 
     public function defaultTemplate(string $type): string
@@ -113,7 +122,7 @@ class PublicTextFileService
                 return $conf['default_template'];
             }
 
-            $sitemap = $conf['sitemap_url'] ?: url('/sitemap.xml');
+            $sitemap = $conf['sitemap_url'] ?: '{url}/sitemap.xml';
 
             return "User-agent: *\nAllow: /\nDisallow: /admin\n\nSitemap: ".$sitemap."\n";
         }

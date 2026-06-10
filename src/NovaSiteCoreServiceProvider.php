@@ -12,6 +12,7 @@ use Nbutl\NovaSiteCore\Console\Commands\SeedAdSpotsCommand;
 use Nbutl\NovaSiteCore\Services\AdService;
 use Nbutl\NovaSiteCore\Services\PublicTextFileService;
 use Nbutl\NovaSiteCore\Services\SiteConfigService;
+use Nbutl\NovaSiteCore\Services\SitemapService;
 use Nbutl\NovaSiteCore\View\Components\Ad;
 use Nbutl\NovaSiteCore\View\Components\AdHead;
 
@@ -24,6 +25,7 @@ class NovaSiteCoreServiceProvider extends ServiceProvider
         $this->app->singleton(SiteConfigService::class);
         $this->app->singleton(AdService::class);
         $this->app->singleton(PublicTextFileService::class);
+        $this->app->singleton(SitemapService::class);
     }
 
     public function boot(): void
@@ -64,6 +66,13 @@ class NovaSiteCoreServiceProvider extends ServiceProvider
             })->name('nova-site-core.robots-txt');
         }
 
+        if (config('nova-site-core.sitemap.enabled')) {
+            Route::get('/sitemap.xml', function (SitemapService $svc) {
+                return response($svc->xml(), 200)
+                    ->header('Content-Type', 'application/xml; charset=UTF-8');
+            })->name('nova-site-core.sitemap');
+        }
+
         if ($this->app->environment('local')) {
             Route::get(config('nova-site-core.quick_login.path', '/quick-login'), function () {
                 $model = Auth::getProvider()->getModel();
@@ -73,7 +82,7 @@ class NovaSiteCoreServiceProvider extends ServiceProvider
                 Auth::login($user);
 
                 return redirect(config('nova-site-core.quick_login.redirect', '/admin'));
-            })->name('nova-site-core.quick-login');
+            })->middleware('web')->name('nova-site-core.quick-login'); // 需 web 中间件组提供 session，否则登录态无法持久化
         }
     }
 

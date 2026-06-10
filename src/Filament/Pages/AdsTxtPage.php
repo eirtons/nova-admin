@@ -46,7 +46,8 @@ class AdsTxtPage extends Page implements HasSchemas
             $content = $svc->defaultTemplate($this->configType);
         }
 
-        $this->form->fill(['content' => $content]);
+        // {url} 占位符按当前请求域名解析后展示
+        $this->form->fill(['content' => $svc->resolvePlaceholders($content)]);
     }
 
     public function form(Schema $schema): Schema

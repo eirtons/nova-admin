@@ -27,7 +27,8 @@
                 "Nbutl\\NovaSiteCore\\NovaSiteCoreServiceProvider"
             ],
             "aliases": {
-                "SiteConfig": "Nbutl\\NovaSiteCore\\Facades\\SiteConfig"
+                "SiteConfig": "Nbutl\\NovaSiteCore\\Facades\\SiteConfig",
+                "Sitemap": "Nbutl\\NovaSiteCore\\Facades\\Sitemap"
             }
         }
     },

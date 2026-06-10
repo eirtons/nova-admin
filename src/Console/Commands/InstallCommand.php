@@ -57,7 +57,12 @@ class InstallCommand extends Command
             }
         }
 
-        // 7. 后续接入说明
+        // 7. storage 软链（站点设置上传的 Favicon / Logo 经 /storage 访问）
+        if (! file_exists(public_path('storage'))) {
+            $this->call('storage:link');
+        }
+
+        // 8. 后续接入说明
         $this->newLine();
         $this->info('安装完成。请在 AdminPanelProvider 中接入：');
         $this->line('  ->plugin(\Nbutl\NovaSiteCore\NovaSiteCorePlugin::make())');
