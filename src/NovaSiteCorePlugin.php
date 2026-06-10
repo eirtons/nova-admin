@@ -4,6 +4,7 @@ namespace Nbutl\NovaSiteCore;
 
 use Filament\Contracts\Plugin;
 use Filament\Panel;
+use Filament\Support\Enums\Width;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Support\HtmlString;
@@ -62,6 +63,11 @@ class NovaSiteCorePlugin implements Plugin
         }
 
         $panel->resources($resources)->pages($pages);
+
+        // 布局：内容区放开为全宽、侧边栏收窄（Filament 默认 20rem + 7xl 上限，大屏右侧留白明显）
+        $panel
+            ->maxContentWidth(config('nova-site-core.layout.max_content_width', Width::Full))
+            ->sidebarWidth(config('nova-site-core.layout.sidebar_width', '16rem'));
 
         if ($this->useLogin) {
             $panel->login(Login::class);
