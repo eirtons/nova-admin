@@ -11,6 +11,7 @@ use Nbutl\NovaSiteCore\Filament\Pages\AdsTxtPage;
 use Nbutl\NovaSiteCore\Filament\Pages\Auth\Login;
 use Nbutl\NovaSiteCore\Filament\Pages\RobotsTxtPage;
 use Nbutl\NovaSiteCore\Filament\Pages\SiteSettingsPage;
+use Nbutl\NovaSiteCore\Filament\Pages\SystemLogsPage;
 use Nbutl\NovaSiteCore\Filament\Resources\AdSpotResource;
 use Nbutl\NovaSiteCore\Http\Middleware\SetAdminLocale;
 
@@ -55,6 +56,9 @@ class NovaSiteCorePlugin implements Plugin
         }
         if (config('nova-site-core.robots_txt.enabled', true)) {
             $pages[] = RobotsTxtPage::class;
+        }
+        if (config('nova-site-core.logs.enabled', true)) {
+            $pages[] = SystemLogsPage::class;
         }
 
         $panel->resources($resources)->pages($pages);

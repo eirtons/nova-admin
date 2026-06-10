@@ -71,6 +71,14 @@ php artisan migrate
 
 > 会创建 `site_configs`、`ad_spots` 两张表，并生成 `config/nova-site-core.php`。
 
+同时把后台生成的两个文件加入 `.gitignore`（否则部署脚本 `git reset --hard` 会把后台保存的内容回滚掉）：
+
+```bash
+echo "/public/robots.txt" >> .gitignore
+echo "/public/ads.txt" >> .gitignore
+git rm --cached public/robots.txt   # Laravel 自带该文件，若已被跟踪需先取消跟踪
+```
+
 ### 4. 在 AdminPanelProvider 一行接入插件
 
 编辑 `app/Providers/Filament/AdminPanelProvider.php`：
@@ -125,6 +133,7 @@ php artisan serve
 | ads.txt 编辑 | 后台「Ads.txt」+ `GET /ads.txt` |
 | robots.txt 编辑（含默认模板） | 后台「Robots.txt」+ `GET /robots.txt` |
 | sitemap.xml（静态条目 + 项目注册动态来源，带缓存） | `GET /sitemap.xml` |
+| 系统日志（查看尾部 / 下载 / 删除，兼容单文件与按天分割） | 后台「系统日志」 |
 | 账号密码登录 | `/admin/login`（账号字段可配） |
 | 后台中文 | 自动 |
 | 默认管理员 | `nova / nova` |
