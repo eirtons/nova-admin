@@ -6,7 +6,6 @@ use BackedEnum;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
@@ -31,6 +30,8 @@ class AdsTxtPage extends Page implements HasSchemas
 
     protected string $fieldLabel = 'Ads.txt 内容';
 
+    protected string $placeholder = 'google.com, pub-xxxxxxxxxxxxxxxx, DIRECT, f08c47fec0942fa0';
+
     public static function getNavigationGroup(): ?string
     {
         return config('nova-site-core.navigation.group');
@@ -54,14 +55,23 @@ class AdsTxtPage extends Page implements HasSchemas
     {
         return $schema
             ->components([
-                Section::make($this->fieldLabel)
-                    ->schema([
-                        Textarea::make('content')
-                            ->label($this->fieldLabel)
-                            ->rows(12),
-                    ]),
+                Textarea::make('content')
+                    ->label($this->fieldLabel)
+                    ->rows(14)
+                    ->placeholder($this->placeholder)
+                    ->helperText($this->helperText()),
             ])
             ->statePath('data');
+    }
+
+    protected function helperText(): string
+    {
+        $file = str_replace('_', '.', $this->configType);
+        $emptyBehavior = config("nova-site-core.{$this->configType}.empty_behavior") === 'delete'
+            ? '删除该文件'
+            : '清空该文件';
+
+        return "保存后写入 public/{$file} 并同步数据库，前台 GET /{$file} 直接访问；内容清空并保存则{$emptyBehavior}。";
     }
 
     public function save(): void
