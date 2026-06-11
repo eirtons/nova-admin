@@ -30,10 +30,11 @@ return [
     | 一个 position 可对应多条 AdSpot 记录，按 sort_order 排序输出。
     */
     'ad_positions' => [
-        'global_head'  => '全局 Head',
-        'home_banner1' => '首页 Banner 1',
-        'home_banner2' => '首页 Banner 2',
-        'page_detail'  => '详情页 Banner',
+        'global_head'    => '全局 Head',
+        'home_banner1'   => '首页 Banner 1',
+        'home_banner2'   => '首页 Banner 2',
+        'detail_banner1' => '详情页 Banner 1',
+        'detail_banner2' => '详情页 Banner 2',
     ],
 
     /*
