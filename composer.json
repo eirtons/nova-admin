@@ -2,7 +2,6 @@
     "name": "nbutl/nova-admin",
     "description": "多站点复用的通用后台底座：广告、站点设置、ads.txt、robots.txt、后台中文、登录与默认管理员（Laravel 12 + Filament 5）。",
     "type": "library",
-    "version": "1.0.0",
     "license": "MIT",
     "require": {
         "php": "^8.2",
