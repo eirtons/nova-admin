@@ -21,44 +21,10 @@ php artisan filament:install --panels
 
 > 数据库用 SQLite 最省事：`.env` 里 `DB_CONNECTION=sqlite`，并 `touch database/database.sqlite`（Laravel 12 默认已是 SQLite）。
 
-### 2. 引用本包
-
-**方式 A —— 本地 path 引用（本地多项目共用，推荐开发期）**
-
-在 `mysite/composer.json` 顶层加 `repositories`，再 require：
-
-```jsonc
-{
-  "repositories": [
-    {
-      "type": "path",
-      "url": "../nova-admin-pkg",
-      "options": { "symlink": true }
-    }
-  ]
-}
-```
+### 2. 安装本包
 
 ```bash
-composer require "nbutl/nova-admin:*"
-```
-
-> ⚠️ 实测注意：path 包必须带稳定版本号才能被默认 `minimum-stability: stable` 的项目引用。
-> 本包 `composer.json` 已写 `"version": "1.0.0"`，无需额外处理。
-> 路径 `url` 按你的实际目录调整（示例假设 `mysite` 与 `nova-admin-pkg` 同级）。
-
-**方式 B —— 私有 Git 仓库引用**
-
-```jsonc
-{
-  "repositories": [
-    { "type": "vcs", "url": "git@your-git-host:nbutl/nova-admin.git" }
-  ]
-}
-```
-
-```bash
-composer require "nbutl/nova-admin:^1.0"
+composer require nbutl/nova-admin:^1.0
 ```
 
 ### 3. 发布配置与迁移，建表
