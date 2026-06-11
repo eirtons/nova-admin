@@ -110,6 +110,11 @@ class NovaAdminServiceProvider extends ServiceProvider
 
     protected function migrationPath(string $name, int $offsetSeconds = 0): string
     {
+        $existing = glob(database_path("migrations/*_{$name}.php"));
+        if ($existing !== false && $existing !== []) {
+            return $existing[0];
+        }
+
         $timestamp = now()->addSeconds($offsetSeconds)->format('Y_m_d_His');
 
         return database_path("migrations/{$timestamp}_{$name}.php");

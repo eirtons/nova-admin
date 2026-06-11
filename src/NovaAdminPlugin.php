@@ -47,6 +47,10 @@ class NovaAdminPlugin implements Plugin
 
     public function register(Panel $panel): void
     {
+        if ($panel->hasPlugin($this->getId())) {
+            return;
+        }
+
         $resources = [AdSpotResource::class];
 
         $pages = [SiteSettingsPage::class];

@@ -2,89 +2,64 @@
 
 多站点复用的通用后台底座（**Laravel 12 + Filament 5**）：广告管理、站点设置、ads.txt、robots.txt、后台中文、账号密码登录、默认管理员、后台 Logo 跳前台。
 
-> 接入后，新项目只需写自己的前台页面和业务后台，通用底座由本包统一维护、可一键 `composer update` 升级。
+> 接入后，新项目只需写自己的前台页面和业务后台，通用底座由本包统一维护。
 
 ---
 
 ## 一、新建项目从零接入（已实测，可直接照抄）
 
-### 1. 起一个干净 Laravel + Filament 项目
+### 1. 创建 Laravel 项目并安装本包
 
 ```bash
 composer create-project laravel/laravel:^12.0 mysite
 cd mysite
 
-# 装 Filament 5 并创建后台 panel（生成 app/Providers/Filament/AdminPanelProvider.php）
-composer require filament/filament:"^5.0" -W
+composer require nbutl/nova-admin:^1.0 -W
+```
+
+`nova-admin` 已依赖 Filament 5，不需要再单独执行
+`composer require filament/filament`。
+
+> Laravel 12 新项目默认使用 SQLite；改用 MySQL 等数据库时，先正确配置 `.env`。
+
+### 2. 创建后台 Panel
+
+```bash
 php artisan filament:install --panels
 ```
 
-> 数据库用 SQLite 最省事：`.env` 里 `DB_CONNECTION=sqlite`，并 `touch database/database.sqlite`（Laravel 12 默认已是 SQLite）。
+使用默认 Panel ID `admin`。本包会自动接入该 Panel，无需修改
+`app/Providers/Filament/AdminPanelProvider.php`。
 
-### 2. 安装本包
-
-```bash
-composer require nbutl/nova-admin:^1.0
-```
-
-### 3. 发布配置与迁移，建表
+### 3. 一键安装
 
 ```bash
-php artisan vendor:publish --tag=nova-admin-config
-php artisan vendor:publish --tag=nova-admin-migrations
-php artisan migrate
-```
-
-> 会创建 `site_configs`、`ad_spots` 两张表，并生成 `config/nova-admin.php`。
-
-同时把后台生成的两个文件加入 `.gitignore`（否则部署脚本 `git reset --hard` 会把后台保存的内容回滚掉）：
-
-```bash
-echo "/public/robots.txt" >> .gitignore
-echo "/public/ads.txt" >> .gitignore
-git rm --cached public/robots.txt   # Laravel 自带该文件，若已被跟踪需先取消跟踪
-```
-
-### 4. 在 AdminPanelProvider 一行接入插件
-
-编辑 `app/Providers/Filament/AdminPanelProvider.php`：
-
-```php
-use Nbutl\NovaAdmin\NovaAdminPlugin;
-
-public function panel(Panel $panel): Panel
-{
-    return $panel
-        ->default()
-        ->id('admin')
-        ->path('admin')
-        // ...Filament 默认配置...
-        ->plugin(NovaAdminPlugin::make());   // ← 加这一行
-}
-```
-
-插件会自动注册：广告 Resource、站点设置 / ads.txt / robots.txt 页面、自定义账号密码登录页、
-后台中文中间件、Logo 跳前台。
-
-### 5. 生成默认管理员与示例广告位
-
-```bash
-# 一条龙：生成管理员 + 初始化广告位（含交互确认）
 php artisan nova-admin:install
-
-# 或分开执行
-php artisan nova-admin:create-admin     # 默认管理员 nova / nova
-php artisan ad:seed                          # 填充示例广告位
 ```
 
-### 6. 启动验证
+该命令会把插件接入 `admin` Panel、发布配置与迁移、执行待运行迁移、
+创建默认管理员、填充示例广告、初始化 robots.txt 和站点设置，并创建 storage 软链。
+
+如果后台生成的 `public/robots.txt`、`public/ads.txt` 不准备提交到 Git，请加入
+`.gitignore`。Laravel 默认已跟踪 `public/robots.txt`，还需执行：
+
+```gitignore
+/public/robots.txt
+/public/ads.txt
+```
+
+```bash
+git rm --cached public/robots.txt
+```
+
+### 4. 启动验证
 
 ```bash
 php artisan serve
 ```
 
 访问 `http://127.0.0.1:8000/admin` → 用 **nova / nova** 登录，即可看到：
-广告管理、站点设置、Ads.txt、Robots.txt 四个后台入口。
+广告管理、站点设置、Ads.txt、Robots.txt、系统日志五个后台入口。
 
 > 上线前请立即在后台修改默认管理员密码。
 
@@ -94,7 +69,7 @@ php artisan serve
 
 | 能力 | 入口 |
 |------|------|
-| 广告管理（一位多条、排序、启用） | 后台「广告管理」 |
+| 广告管理（一位多条、按创建顺序输出、启用） | 后台「广告管理」 |
 | 站点设置（基础/SEO/媒体/品牌） | 后台「站点设置」 |
 | ads.txt 编辑 | 后台「Ads.txt」+ `GET /ads.txt` |
 | robots.txt 编辑（含默认模板） | 后台「Robots.txt」+ `GET /robots.txt` |
@@ -160,10 +135,10 @@ Sitemap::register(fn () => Article::published()->get()->map(fn ($a) => [
 ## 四、命令
 
 ```bash
-php artisan nova-admin:install                  # 安装：管理员 + 初始化数据
+php artisan nova-admin:install                  # 接入 Panel、发布迁移、建表并初始化
 php artisan nova-admin:create-admin [--force]   # 创建/重置默认管理员
-php artisan ad:seed [--off]                          # 填充（先清空）/ 禁用广告
-php artisan nova-admin:clear-cache              # 清广告缓存
+php artisan ad:seed [--off]                     # 填充测试广告（先清空）/ 禁用广告
+php artisan nova-admin:clear-cache              # 清广告与 sitemap 缓存
 ```
 
 ---
@@ -173,6 +148,7 @@ php artisan nova-admin:clear-cache              # 清广告缓存
 发布后编辑 `config/nova-admin.php`，常用项：
 
 ```php
+'panel'        => ['id' => 'admin'],
 'ad_positions' => [ /* 自定义广告位枚举 */ ],
 'navigation'   => ['group' => '站点设置', 'sort' => 90],
 'admin'        => ['default_name' => 'nova', 'login_field' => 'name'],
@@ -189,19 +165,17 @@ php artisan nova-admin:clear-cache              # 清广告缓存
 - **加纯业务功能**（如 Game / Destination）：项目正常写 Filament Resource/Page，与本包并列注册，互不干扰。
 - **给包的表加字段**：项目写补充 ALTER 迁移加列 + 继承包模型，再用 `config('nova-admin.models.*')` 指向子类。
 - **简单业务配置**：直接走 `site_configs` 键值（`SiteConfig::set`），无需建表。
-- **定制包页面**：① 改 `config`（零代码）→ ② `vendor:publish --tag=nova-admin-views` 改 blade → ③ 继承包的 Resource/Page 类覆盖方法。
-
-> 完整扩展指南见设计文档《公共功能抽离设计方案.md》第十四节。
+- **定制包页面视图**：发布 `vendor:publish --tag=nova-admin-views` 后修改 Blade。
 
 ---
 
 ## 生产部署注意（必读，否则后台登录会挂）
 
-本包的后台（含登录页）基于 Filament / Livewire。宝塔等面板的 Nginx 默认配置会用静态
+本包的后台（含登录页）基于 Filament / Livewire。某些面板生成的 Nginx 配置会用静态
 `location` 拦截所有 `.js` 请求，导致 Livewire 的 `/livewire/livewire.js` 路由 404 ——
 表现为**后台登录页点击无反应、所有 Livewire 交互失效**。
 
-部署（含每次更新）时必须把前端资源发布为物理文件：
+如果服务器静态规则会拦截 `/livewire/livewire.js`，部署时把前端资源发布为物理文件：
 
 ```bash
 php artisan filament:assets             # Filament 静态资源 → public/
@@ -214,8 +188,6 @@ php artisan livewire:publish --assets   # Livewire JS → public/vendor/livewire
 （`nova-admin:install` 已自动创建；手动执行 `php artisan storage:link`），
 并保证 `storage/` 归属 web 用户、软链 `public/storage` 随站点一起部署。
 若生产启用了 `opcache.validate_timestamps=0`，更新后还需 reload php-fpm 重置 OPcache。
-
-> 完整可参考 webdeploy 的 `deploy-scripts/worldcup-news/create.sh` / `update.sh`。
 
 ---
 
