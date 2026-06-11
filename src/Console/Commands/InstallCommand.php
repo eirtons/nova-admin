@@ -12,32 +12,37 @@ class InstallCommand extends Command
 {
     protected $signature = 'nova-admin:install {--force : 重置默认管理员密码}';
 
-    protected $description = '安装 nova-admin：发布配置和迁移、建表、生成默认管理员与初始化数据';
+    protected $description = '安装 nova-admin：创建并接入后台 Panel、发布配置和迁移、生成默认管理员与初始化数据';
 
     public function handle(): int
     {
         $this->info('开始安装 nova-admin...');
 
-        // 1. 发布配置与迁移（已存在的文件不会覆盖）
+        // 1. 新项目尚无 Panel 时，自动创建默认 admin Panel
+        if (! $this->ensurePanelExists()) {
+            return self::FAILURE;
+        }
+
+        // 2. 发布配置与迁移（已存在的文件不会覆盖）
         $this->call('vendor:publish', ['--tag' => 'nova-admin-config']);
         $this->call('vendor:publish', ['--tag' => 'nova-admin-migrations']);
 
-        // 2. 将插件接到 Filament Panel 配置链尾，确保覆盖 Filament 默认登录页
+        // 3. 将插件接到 Filament Panel 配置链尾，确保覆盖 Filament 默认登录页
         if (! $this->registerPanelPlugin()) {
             return self::FAILURE;
         }
 
-        // 3. 执行项目全部待运行迁移，确保 users 与包表均已创建
+        // 4. 执行项目全部待运行迁移，确保 users 与包表均已创建
         $this->call('migrate', ['--force' => true]);
 
-        // 4. 生成默认管理员
+        // 5. 生成默认管理员
         $seeder = new AdminUserSeeder();
         $seeder->setContainer($this->laravel);
         $seeder->setCommand($this);
         $seeder->force = (bool) $this->option('force');
         $seeder->run();
 
-        // 5. 仅为空表填充测试广告，避免重复安装覆盖已有数据
+        // 6. 仅为空表填充测试广告，避免重复安装覆盖已有数据
         $adModel = config('nova-admin.models.ad_spot', \Nbutl\NovaAdmin\Models\AdSpot::class);
         if ($adModel::query()->doesntExist()) {
             $this->call('ad:seed');
@@ -45,14 +50,14 @@ class InstallCommand extends Command
             $this->info('广告数据已存在，跳过测试广告填充。');
         }
 
-        // 6. 初始化默认 robots.txt（覆盖 Laravel 自带的占位 public/robots.txt）
+        // 7. 初始化默认 robots.txt（覆盖 Laravel 自带的占位 public/robots.txt）
         if (app(SiteConfigService::class)->get('robots_txt_content') === null) {
             $svc = app(PublicTextFileService::class);
             $svc->save('robots_txt', $svc->defaultTemplate('robots_txt'));
             $this->info('已写入默认 robots.txt（Sitemap 按 APP_URL 域名生成）');
         }
 
-        // 7. 初始化站点设置默认值（仅写入尚未设置的键）
+        // 8. 初始化站点设置默认值（仅写入尚未设置的键）
         $config = app(SiteConfigService::class);
         foreach (config('nova-admin.site_defaults', []) as $key => $value) {
             if ($config->get($key) === null) {
@@ -61,16 +66,32 @@ class InstallCommand extends Command
             }
         }
 
-        // 8. storage 软链（站点设置上传的 Favicon / Logo 经 /storage 访问）
+        // 9. storage 软链（站点设置上传的 Favicon / Logo 经 /storage 访问）
         if (! file_exists(public_path('storage'))) {
             $this->call('storage:link');
         }
 
-        // 9. 完成
+        // 10. 完成
         $this->newLine();
         $this->info('安装完成。nova-admin 已接入 Filament Panel。');
 
         return self::SUCCESS;
+    }
+
+    protected function ensurePanelExists(): bool
+    {
+        $providerFiles = glob(app_path('Providers/Filament/*PanelProvider.php')) ?: [];
+
+        if ($providerFiles !== []) {
+            return true;
+        }
+
+        $this->info('未检测到 Filament Panel，正在创建默认 admin Panel...');
+
+        return $this->call('filament:install', [
+            '--panels' => true,
+            '--no-interaction' => true,
+        ]) === self::SUCCESS;
     }
 
     protected function registerPanelPlugin(): bool
@@ -111,7 +132,7 @@ class InstallCommand extends Command
 
         $this->error(
             "未找到 id={$panelId} 的 Filament PanelProvider。"
-            .'请先执行 php artisan filament:install --panels，再重新运行本命令。'
+            .'请确认 config/nova-admin.php 中的 Panel ID 与项目现有 Panel 一致。'
         );
 
         return false;

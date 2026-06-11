@@ -45,7 +45,7 @@ class AdminUserSeeder extends Seeder
             $existing = $userModel::query()->where('email', $email)->first();
 
             if ($existing && ! $this->force) {
-                $this->command?->warn("管理员 {$email} 已存在，未覆盖（使用 --force 可重置密码）。");
+                $this->command?->warn("管理员账号 {$name} 已存在，未覆盖（使用 --force 可重置密码）。");
 
                 return;
             }
@@ -55,7 +55,7 @@ class AdminUserSeeder extends Seeder
                 $attributes,
             );
 
-            $this->command?->info("默认管理员已就绪：{$name} / {$password}（登录邮箱 {$email}）。");
+            $this->command?->info("默认管理员已就绪：账号 {$name} / 密码 {$password}。");
 
             if (app()->environment('production')) {
                 $this->command?->warn('当前为 production 环境，默认管理员为 nova/nova，请立即登录后台修改密码！');

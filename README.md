@@ -14,7 +14,7 @@
 composer create-project laravel/laravel:^12.0 mysite
 cd mysite
 
-composer require nbutl/nova-admin -W
+composer require nbutl/nova-admin
 ```
 
 不指定版本号时，Composer 会安装 Packagist 上兼容当前项目的最新稳定版本。
@@ -23,23 +23,16 @@ composer require nbutl/nova-admin -W
 
 > Laravel 12 新项目默认使用 SQLite；改用 MySQL 等数据库时，先正确配置 `.env`。
 
-### 2. 创建后台 Panel
-
-```bash
-php artisan filament:install --panels
-```
-
-使用默认 Panel ID `admin`。本包会自动接入该 Panel，无需修改
-`app/Providers/Filament/AdminPanelProvider.php`。
-
-### 3. 一键安装
+### 2. 一键安装
 
 ```bash
 php artisan nova-admin:install
 ```
 
-该命令会把插件接入 `admin` Panel、发布配置与迁移、执行待运行迁移、
+该命令会自动创建并接入默认的 `admin` Panel、发布配置与迁移、执行待运行迁移、
 创建默认管理员、填充示例广告、初始化 robots.txt 和站点设置，并创建 storage 软链。
+无需单独执行 `php artisan filament:install --panels`，也无需修改
+`app/Providers/Filament/AdminPanelProvider.php`。
 
 如果后台生成的 `public/robots.txt`、`public/ads.txt` 不准备提交到 Git，请加入
 `.gitignore`。Laravel 默认已跟踪 `public/robots.txt`，还需执行：
@@ -53,7 +46,7 @@ php artisan nova-admin:install
 git rm --cached public/robots.txt
 ```
 
-### 4. 启动验证
+### 3. 启动验证
 
 ```bash
 php artisan serve
