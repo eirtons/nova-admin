@@ -29,22 +29,13 @@ composer require nbutl/nova-admin
 php artisan nova-admin:install
 ```
 
-该命令会自动创建并接入默认的 `admin` Panel、发布配置与迁移、执行待运行迁移、
+该命令会自动创建并接入默认的 `admin` Panel、发布配置、执行包内及项目待运行迁移、
 创建默认管理员、填充示例广告、初始化 robots.txt 和站点设置，并创建 storage 软链。
-无需单独执行 `php artisan filament:install --panels`，也无需修改
-`app/Providers/Filament/AdminPanelProvider.php`。
+无需单独安装 Filament Panel，也无需手动修改 `AdminPanelProvider.php`。
 
-如果后台生成的 `public/robots.txt`、`public/ads.txt` 不准备提交到 Git，请加入
-`.gitignore`。Laravel 默认已跟踪 `public/robots.txt`，还需执行：
-
-```gitignore
-/public/robots.txt
-/public/ads.txt
-```
-
-```bash
-git rm --cached public/robots.txt
-```
+安装命令还会将后台生成的 `public/robots.txt`、`public/ads.txt` 加入项目
+`.gitignore`。项目已初始化 Git 时，会同时取消对 Laravel 默认
+`public/robots.txt` 的跟踪。
 
 ### 3. 启动验证
 
@@ -73,15 +64,6 @@ php artisan serve
 | 后台中文 | 自动 |
 | 默认管理员 | `nova / nova` |
 | Logo 点击跳前台 | 后台左上角品牌 |
-
-> robots.txt / ads.txt 默认 `both` 模式：保存时写 `public/` 静态文件（web server 直出最快），
-> 同时存数据库；文件不存在或只读时由路由兜底动态输出。
-> 注意 Laravel 自带的 `public/robots.txt` 会优先于路由——`nova-admin:install` 安装时会自动
-> 用默认模板（`User-agent: * / Allow: / / Disallow: /admin` + `Sitemap`）覆盖它；
-> 后台编辑框未保存过时也会预填该模板。
-> 内容支持 `{url}` 占位符（= 当前请求域名）：数据库存占位符，路由输出与后台编辑框按当前域名
-> 动态解析，写静态文件时按写入时刻的域名解析（install 时为 `APP_URL`）。
-
 ---
 
 ## 三、前台使用
@@ -129,7 +111,7 @@ Sitemap::register(fn () => Article::published()->get()->map(fn ($a) => [
 ## 四、命令
 
 ```bash
-php artisan nova-admin:install                  # 接入 Panel、发布迁移、建表并初始化
+php artisan nova-admin:install                  # 接入 Panel、建表并初始化
 php artisan nova-admin:create-admin [--force]   # 创建/重置默认管理员
 php artisan ad:seed [--off]                     # 填充测试广告（先清空）/ 禁用广告
 php artisan nova-admin:clear-cache              # 清广告与 sitemap 缓存
@@ -189,6 +171,5 @@ php artisan livewire:publish --assets   # Livewire JS → public/vendor/livewire
 
 ```bash
 composer update nbutl/nova-admin
-php artisan vendor:publish --tag=nova-admin-migrations  # 若有新迁移
 php artisan migrate
 ```

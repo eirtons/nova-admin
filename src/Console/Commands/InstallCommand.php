@@ -7,12 +7,13 @@ use Illuminate\Support\Facades\File;
 use Nbutl\NovaAdmin\Database\Seeders\AdminUserSeeder;
 use Nbutl\NovaAdmin\Services\PublicTextFileService;
 use Nbutl\NovaAdmin\Services\SiteConfigService;
+use Symfony\Component\Process\Process;
 
 class InstallCommand extends Command
 {
     protected $signature = 'nova-admin:install {--force : 重置默认管理员密码}';
 
-    protected $description = '安装 nova-admin：创建并接入后台 Panel、发布配置和迁移、生成默认管理员与初始化数据';
+    protected $description = '安装 nova-admin：创建并接入后台 Panel、执行迁移、生成默认管理员与初始化数据';
 
     public function handle(): int
     {
@@ -23,9 +24,8 @@ class InstallCommand extends Command
             return self::FAILURE;
         }
 
-        // 2. 发布配置与迁移（已存在的文件不会覆盖）
+        // 2. 发布配置（迁移由包直接加载，无需发布到项目）
         $this->call('vendor:publish', ['--tag' => 'nova-admin-config']);
-        $this->call('vendor:publish', ['--tag' => 'nova-admin-migrations']);
 
         // 3. 将插件接到 Filament Panel 配置链尾，确保覆盖 Filament 默认登录页
         if (! $this->registerPanelPlugin()) {
@@ -50,14 +50,17 @@ class InstallCommand extends Command
             $this->info('广告数据已存在，跳过测试广告填充。');
         }
 
-        // 7. 初始化默认 robots.txt（覆盖 Laravel 自带的占位 public/robots.txt）
+        // 7. 忽略后台生成的公开文本文件，并取消跟踪 Laravel 默认 robots.txt
+        $this->ignoreGeneratedPublicFiles();
+
+        // 8. 初始化默认 robots.txt（覆盖 Laravel 自带的占位 public/robots.txt）
         if (app(SiteConfigService::class)->get('robots_txt_content') === null) {
             $svc = app(PublicTextFileService::class);
             $svc->save('robots_txt', $svc->defaultTemplate('robots_txt'));
             $this->info('已写入默认 robots.txt（Sitemap 按 APP_URL 域名生成）');
         }
 
-        // 8. 初始化站点设置默认值（仅写入尚未设置的键）
+        // 9. 初始化站点设置默认值（仅写入尚未设置的键）
         $config = app(SiteConfigService::class);
         foreach (config('nova-admin.site_defaults', []) as $key => $value) {
             if ($config->get($key) === null) {
@@ -66,16 +69,58 @@ class InstallCommand extends Command
             }
         }
 
-        // 9. storage 软链（站点设置上传的 Favicon / Logo 经 /storage 访问）
+        // 10. storage 软链（站点设置上传的 Favicon / Logo 经 /storage 访问）
         if (! file_exists(public_path('storage'))) {
             $this->call('storage:link');
         }
 
-        // 10. 完成
+        // 11. 完成
         $this->newLine();
         $this->info('安装完成。nova-admin 已接入 Filament Panel。');
 
         return self::SUCCESS;
+    }
+
+    protected function ignoreGeneratedPublicFiles(): void
+    {
+        $gitignorePath = base_path('.gitignore');
+        $contents = File::exists($gitignorePath) ? File::get($gitignorePath) : '';
+        $lines = preg_split('/\r\n|\r|\n/', $contents) ?: [];
+        $entries = ['/public/robots.txt', '/public/ads.txt'];
+        $missingEntries = array_values(array_diff($entries, $lines));
+
+        if ($missingEntries !== []) {
+            $contents = rtrim($contents);
+            $contents .= ($contents === '' ? '' : PHP_EOL).implode(PHP_EOL, $missingEntries).PHP_EOL;
+            File::put($gitignorePath, $contents);
+            $this->info('已将 public/robots.txt、public/ads.txt 加入 .gitignore。');
+        }
+
+        try {
+            $insideWorkTree = new Process(
+                ['git', 'rev-parse', '--is-inside-work-tree'],
+                base_path(),
+            );
+            $insideWorkTree->run();
+
+            if (! $insideWorkTree->isSuccessful()) {
+                return;
+            }
+
+            $untrack = new Process(
+                ['git', 'rm', '--cached', '--ignore-unmatch', '--', 'public/robots.txt', 'public/ads.txt'],
+                base_path(),
+            );
+            $untrack->run();
+
+            if ($untrack->isSuccessful()) {
+                $this->info('已取消 Git 对 public/robots.txt、public/ads.txt 的跟踪。');
+            } else {
+                $this->warn('无法自动取消公开文本文件的 Git 跟踪，请检查 Git 工作区状态。');
+            }
+        } catch (\Throwable) {
+            $this->warn('未检测到可用的 Git，已跳过取消跟踪操作。');
+        }
     }
 
     protected function ensurePanelExists(): bool

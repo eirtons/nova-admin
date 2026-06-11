@@ -30,6 +30,7 @@ class NovaAdminServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'nova-admin');
 
         $this->loadViewComponentsAs('nova-admin', [
@@ -97,26 +98,7 @@ class NovaAdminServiceProvider extends ServiceProvider
         ], 'nova-admin-config');
 
         $this->publishes([
-            __DIR__.'/../database/migrations/create_site_configs_table.php.stub'
-                => $this->migrationPath('create_site_configs_table'),
-            __DIR__.'/../database/migrations/create_ad_spots_table.php.stub'
-                => $this->migrationPath('create_ad_spots_table', 1),
-        ], 'nova-admin-migrations');
-
-        $this->publishes([
             __DIR__.'/../resources/views' => resource_path('views/vendor/nova-admin'),
         ], 'nova-admin-views');
-    }
-
-    protected function migrationPath(string $name, int $offsetSeconds = 0): string
-    {
-        $existing = glob(database_path("migrations/*_{$name}.php"));
-        if ($existing !== false && $existing !== []) {
-            return $existing[0];
-        }
-
-        $timestamp = now()->addSeconds($offsetSeconds)->format('Y_m_d_His');
-
-        return database_path("migrations/{$timestamp}_{$name}.php");
     }
 }
