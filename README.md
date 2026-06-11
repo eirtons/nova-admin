@@ -14,9 +14,10 @@
 composer create-project laravel/laravel:^12.0 mysite
 cd mysite
 
-composer require nbutl/nova-admin:^1.0 -W
+composer require nbutl/nova-admin -W
 ```
 
+不指定版本号时，Composer 会安装 Packagist 上兼容当前项目的最新稳定版本。
 `nova-admin` 已依赖 Filament 5，不需要再单独执行
 `composer require filament/filament`。
 
