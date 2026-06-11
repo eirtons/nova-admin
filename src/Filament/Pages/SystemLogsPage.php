@@ -1,6 +1,6 @@
 <?php
 
-namespace Nbutl\NovaSiteCore\Filament\Pages;
+namespace Nbutl\NovaAdmin\Filament\Pages;
 
 use BackedEnum;
 use Filament\Actions\Action;
@@ -21,7 +21,7 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Number;
-use Nbutl\NovaSiteCore\Services\LogFileService;
+use Nbutl\NovaAdmin\Services\LogFileService;
 
 class SystemLogsPage extends Page implements HasActions, HasSchemas, HasTable
 {
@@ -35,7 +35,7 @@ class SystemLogsPage extends Page implements HasActions, HasSchemas, HasTable
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentMagnifyingGlass;
 
-    protected string $view = 'nova-site-core::filament.pages.system-logs';
+    protected string $view = 'nova-admin::filament.pages.system-logs';
 
     /** 日志条目偏长，本页放开为全宽（其他页面保持默认宽度） */
     protected Width|string|null $maxContentWidth = Width::Full;
@@ -49,12 +49,12 @@ class SystemLogsPage extends Page implements HasActions, HasSchemas, HasTable
 
     public static function getNavigationGroup(): ?string
     {
-        return config('nova-site-core.navigation.group');
+        return config('nova-admin.navigation.group');
     }
 
     public function mount(): void
     {
-        $this->entriesLimit = max(1, (int) config('nova-site-core.logs.search_limit', 100));
+        $this->entriesLimit = max(1, (int) config('nova-admin.logs.search_limit', 100));
 
         // 默认只看最新的一个文件，避免打开页面就全量查询；下拉可手动切「全部文件」
         $latest = app(LogFileService::class)->files()->first();

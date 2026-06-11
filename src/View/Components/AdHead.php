@@ -1,9 +1,9 @@
 <?php
 
-namespace Nbutl\NovaSiteCore\View\Components;
+namespace Nbutl\NovaAdmin\View\Components;
 
 use Illuminate\View\Component;
-use Nbutl\NovaSiteCore\Services\AdService;
+use Nbutl\NovaAdmin\Services\AdService;
 
 class AdHead extends Component
 {

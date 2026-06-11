@@ -1,6 +1,6 @@
 <?php
 
-namespace Nbutl\NovaSiteCore\Services;
+namespace Nbutl\NovaAdmin\Services;
 
 use Illuminate\Support\Facades\File;
 
@@ -132,6 +132,6 @@ class PublicTextFileService
 
     protected function conf(string $type): array
     {
-        return config("nova-site-core.$type");
+        return config("nova-admin.$type");
     }
 }

@@ -1,21 +1,21 @@
 <?php
 
-namespace Nbutl\NovaSiteCore;
+namespace Nbutl\NovaAdmin;
 
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Support\HtmlString;
-use Nbutl\NovaSiteCore\Filament\Pages\AdsTxtPage;
-use Nbutl\NovaSiteCore\Filament\Pages\Auth\Login;
-use Nbutl\NovaSiteCore\Filament\Pages\RobotsTxtPage;
-use Nbutl\NovaSiteCore\Filament\Pages\SiteSettingsPage;
-use Nbutl\NovaSiteCore\Filament\Pages\SystemLogsPage;
-use Nbutl\NovaSiteCore\Filament\Resources\AdSpotResource;
-use Nbutl\NovaSiteCore\Http\Middleware\SetAdminLocale;
+use Nbutl\NovaAdmin\Filament\Pages\AdsTxtPage;
+use Nbutl\NovaAdmin\Filament\Pages\Auth\Login;
+use Nbutl\NovaAdmin\Filament\Pages\RobotsTxtPage;
+use Nbutl\NovaAdmin\Filament\Pages\SiteSettingsPage;
+use Nbutl\NovaAdmin\Filament\Pages\SystemLogsPage;
+use Nbutl\NovaAdmin\Filament\Resources\AdSpotResource;
+use Nbutl\NovaAdmin\Http\Middleware\SetAdminLocale;
 
-class NovaSiteCorePlugin implements Plugin
+class NovaAdminPlugin implements Plugin
 {
     protected bool $useChineseLocale = true;
 
@@ -28,7 +28,7 @@ class NovaSiteCorePlugin implements Plugin
 
     public function getId(): string
     {
-        return 'nova-site-core';
+        return 'nova-admin';
     }
 
     public function withoutLogin(): static
@@ -51,13 +51,13 @@ class NovaSiteCorePlugin implements Plugin
 
         $pages = [SiteSettingsPage::class];
 
-        if (config('nova-site-core.ads_txt.enabled', true)) {
+        if (config('nova-admin.ads_txt.enabled', true)) {
             $pages[] = AdsTxtPage::class;
         }
-        if (config('nova-site-core.robots_txt.enabled', true)) {
+        if (config('nova-admin.robots_txt.enabled', true)) {
             $pages[] = RobotsTxtPage::class;
         }
-        if (config('nova-site-core.logs.enabled', true)) {
+        if (config('nova-admin.logs.enabled', true)) {
             $pages[] = SystemLogsPage::class;
         }
 
@@ -65,9 +65,9 @@ class NovaSiteCorePlugin implements Plugin
 
         // 布局：侧边栏收窄（默认 20rem 偏宽）；内容区宽度保持 Filament 默认，
         // 需要大空间的页面（如系统日志）自行覆盖 $maxContentWidth
-        $panel->sidebarWidth(config('nova-site-core.layout.sidebar_width', '16rem'));
+        $panel->sidebarWidth(config('nova-admin.layout.sidebar_width', '16rem'));
 
-        if ($maxWidth = config('nova-site-core.layout.max_content_width')) {
+        if ($maxWidth = config('nova-admin.layout.max_content_width')) {
             $panel->maxContentWidth($maxWidth);
         }
 
@@ -90,7 +90,7 @@ class NovaSiteCorePlugin implements Plugin
      */
     protected function registerLogoLink(): void
     {
-        $conf = config('nova-site-core.admin_brand');
+        $conf = config('nova-admin.admin_brand');
 
         if (empty($conf['logo_link_to_front'])) {
             return;

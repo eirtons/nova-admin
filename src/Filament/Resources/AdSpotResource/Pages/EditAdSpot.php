@@ -1,10 +1,10 @@
 <?php
 
-namespace Nbutl\NovaSiteCore\Filament\Resources\AdSpotResource\Pages;
+namespace Nbutl\NovaAdmin\Filament\Resources\AdSpotResource\Pages;
 
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
-use Nbutl\NovaSiteCore\Filament\Resources\AdSpotResource;
+use Nbutl\NovaAdmin\Filament\Resources\AdSpotResource;
 
 class EditAdSpot extends EditRecord
 {

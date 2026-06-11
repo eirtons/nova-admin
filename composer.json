@@ -1,5 +1,5 @@
 {
-    "name": "nbutl/nova-site-core",
+    "name": "nbutl/nova-admin",
     "description": "多站点复用的通用后台底座：广告、站点设置、ads.txt、robots.txt、后台中文、登录与默认管理员（Laravel 12 + Filament 5）。",
     "type": "library",
     "version": "1.0.0",
@@ -14,8 +14,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Nbutl\\NovaSiteCore\\": "src/",
-            "Nbutl\\NovaSiteCore\\Database\\Seeders\\": "database/seeders/"
+            "Nbutl\\NovaAdmin\\": "src/",
+            "Nbutl\\NovaAdmin\\Database\\Seeders\\": "database/seeders/"
         },
         "files": [
             "src/helpers.php"
@@ -24,11 +24,11 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Nbutl\\NovaSiteCore\\NovaSiteCoreServiceProvider"
+                "Nbutl\\NovaAdmin\\NovaAdminServiceProvider"
             ],
             "aliases": {
-                "SiteConfig": "Nbutl\\NovaSiteCore\\Facades\\SiteConfig",
-                "Sitemap": "Nbutl\\NovaSiteCore\\Facades\\Sitemap"
+                "SiteConfig": "Nbutl\\NovaAdmin\\Facades\\SiteConfig",
+                "Sitemap": "Nbutl\\NovaAdmin\\Facades\\Sitemap"
             }
         }
     },

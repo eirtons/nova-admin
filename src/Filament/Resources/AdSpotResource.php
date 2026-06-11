@@ -1,6 +1,6 @@
 <?php
 
-namespace Nbutl\NovaSiteCore\Filament\Resources;
+namespace Nbutl\NovaAdmin\Filament\Resources;
 
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -19,13 +19,13 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
-use Nbutl\NovaSiteCore\Filament\Resources\AdSpotResource\Pages;
+use Nbutl\NovaAdmin\Filament\Resources\AdSpotResource\Pages;
 
 class AdSpotResource extends Resource
 {
     public static function getModel(): string
     {
-        return config('nova-site-core.models.ad_spot', \Nbutl\NovaSiteCore\Models\AdSpot::class);
+        return config('nova-admin.models.ad_spot', \Nbutl\NovaAdmin\Models\AdSpot::class);
     }
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMegaphone;
@@ -36,12 +36,12 @@ class AdSpotResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return config('nova-site-core.navigation.group');
+        return config('nova-admin.navigation.group');
     }
 
     public static function getNavigationSort(): ?int
     {
-        return config('nova-site-core.navigation.sort');
+        return config('nova-admin.navigation.sort');
     }
 
     public static function form(Schema $schema): Schema
@@ -49,7 +49,7 @@ class AdSpotResource extends Resource
         return $schema->components([
             Select::make('position')
                 ->label('广告位')
-                ->options(config('nova-site-core.ad_positions', []))
+                ->options(config('nova-admin.ad_positions', []))
                 ->required()
                 // 非原生下拉：必填校验走 Filament 红色错误提示，浏览器原生气泡不明显
                 ->native(false)
@@ -81,7 +81,7 @@ class AdSpotResource extends Resource
                 TextColumn::make('position')
                     ->label('广告位')
                     ->badge()
-                    ->formatStateUsing(fn ($state) => config("nova-site-core.ad_positions.$state", $state))
+                    ->formatStateUsing(fn ($state) => config("nova-admin.ad_positions.$state", $state))
                     ->sortable(),
                 ToggleColumn::make('is_active')
                     ->label('启用')
@@ -96,7 +96,7 @@ class AdSpotResource extends Resource
             ->recordActions([
                 ViewAction::make()
                     ->label('查看代码')
-                    ->modalHeading(fn ($record): string => '广告代码 — ' . config("nova-site-core.ad_positions.{$record->position}", $record->position))
+                    ->modalHeading(fn ($record): string => '广告代码 — ' . config("nova-admin.ad_positions.{$record->position}", $record->position))
                     ->modalWidth('3xl')
                     ->infolist(fn (Schema $infolist): Schema => $infolist->schema([
                         Section::make('Head 代码')

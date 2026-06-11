@@ -1,6 +1,6 @@
 <?php
 
-namespace Nbutl\NovaSiteCore\Http\Middleware;
+namespace Nbutl\NovaAdmin\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
@@ -10,7 +10,7 @@ class SetAdminLocale
 {
     public function handle(Request $request, Closure $next): Response
     {
-        app()->setLocale(config('nova-site-core.locale', 'zh_CN'));
+        app()->setLocale(config('nova-admin.locale', 'zh_CN'));
 
         return $next($request);
     }

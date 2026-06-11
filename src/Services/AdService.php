@@ -1,6 +1,6 @@
 <?php
 
-namespace Nbutl\NovaSiteCore\Services;
+namespace Nbutl\NovaAdmin\Services;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -12,7 +12,7 @@ class AdService
      */
     public function forPosition(string $position): Collection
     {
-        $ttl = (int) config('nova-site-core.cache.ttl', 3600);
+        $ttl = (int) config('nova-admin.cache.ttl', 3600);
 
         if ($ttl <= 0) {
             return $this->query($position);
@@ -66,7 +66,7 @@ class AdService
 
     protected function query(string $position): Collection
     {
-        $model = config('nova-site-core.models.ad_spot', \Nbutl\NovaSiteCore\Models\AdSpot::class);
+        $model = config('nova-admin.models.ad_spot', \Nbutl\NovaAdmin\Models\AdSpot::class);
 
         return $model::query()
             ->where('position', $position)
@@ -77,13 +77,13 @@ class AdService
 
     protected function isKnownPosition(string $position): bool
     {
-        return array_key_exists($position, (array) config('nova-site-core.ad_positions', []));
+        return array_key_exists($position, (array) config('nova-admin.ad_positions', []));
     }
 
     protected function unknownPositionHint(string $position): string
     {
         if (config('app.debug')) {
-            return '<!-- nova-site-core: unknown ad position "'.e($position).'" -->';
+            return '<!-- nova-admin: unknown ad position "'.e($position).'" -->';
         }
 
         return '';
@@ -91,11 +91,11 @@ class AdService
 
     protected function key(string $position): string
     {
-        return config('nova-site-core.cache.key_prefix', 'nova_site_core:ads:').$position;
+        return config('nova-admin.cache.key_prefix', 'nova_admin:ads:').$position;
     }
 
     protected function store()
     {
-        return Cache::store(config('nova-site-core.cache.store'));
+        return Cache::store(config('nova-admin.cache.store'));
     }
 }

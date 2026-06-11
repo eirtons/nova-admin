@@ -1,7 +1,7 @@
 <?php
 
-use Nbutl\NovaSiteCore\Services\AdService;
-use Nbutl\NovaSiteCore\Services\SiteConfigService;
+use Nbutl\NovaAdmin\Services\AdService;
+use Nbutl\NovaAdmin\Services\SiteConfigService;
 
 if (! function_exists('site_config')) {
     function site_config(string $key, mixed $default = null): mixed

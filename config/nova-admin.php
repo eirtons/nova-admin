@@ -9,8 +9,8 @@ return [
     | 项目继承包模型扩展后，把这里指向自己的子类，包内部即自动使用项目模型。
     */
     'models' => [
-        'ad_spot'     => \Nbutl\NovaSiteCore\Models\AdSpot::class,
-        'site_config' => \Nbutl\NovaSiteCore\Models\SiteConfig::class,
+        'ad_spot'     => \Nbutl\NovaAdmin\Models\AdSpot::class,
+        'site_config' => \Nbutl\NovaAdmin\Models\SiteConfig::class,
     ],
 
     /*
@@ -44,7 +44,7 @@ return [
     'cache' => [
         'store'      => env('NOVA_CACHE_STORE', null), // null = 项目默认 store
         'ttl'        => env('NOVA_CACHE_TTL', 3600),    // 秒；0 = 不缓存
-        'key_prefix' => 'nova_site_core:ads:',
+        'key_prefix' => 'nova_admin:ads:',
     ],
 
     /*
@@ -118,7 +118,7 @@ return [
     'sitemap' => [
         'enabled'   => true,
         'cache_ttl' => env('NOVA_SITEMAP_CACHE_TTL', 1800), // 秒；0 = 不缓存
-        'cache_key' => 'nova_site_core:sitemap',
+        'cache_key' => 'nova_admin:sitemap',
         'urls'      => [
             ['loc' => '/', 'changefreq' => 'daily', 'priority' => '1.0'],
         ],

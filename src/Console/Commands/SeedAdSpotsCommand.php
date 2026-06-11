@@ -1,6 +1,6 @@
 <?php
 
-namespace Nbutl\NovaSiteCore\Console\Commands;
+namespace Nbutl\NovaAdmin\Console\Commands;
 
 use Illuminate\Console\Command;
 
@@ -12,7 +12,7 @@ class SeedAdSpotsCommand extends Command
 
     public function handle(): int
     {
-        $model = config('nova-site-core.models.ad_spot', \Nbutl\NovaSiteCore\Models\AdSpot::class);
+        $model = config('nova-admin.models.ad_spot', \Nbutl\NovaAdmin\Models\AdSpot::class);
 
         if ($this->option('off')) {
             $count = $model::query()->update(['is_active' => false]);
@@ -24,7 +24,7 @@ class SeedAdSpotsCommand extends Command
         // 每次执行先清空，避免脏数据与重复位置
         $model::query()->delete();
 
-        foreach (config('nova-site-core.ad_positions', []) as $position => $label) {
+        foreach (config('nova-admin.ad_positions', []) as $position => $label) {
             $isHead = $position === 'global_head';
 
             $model::query()->create([

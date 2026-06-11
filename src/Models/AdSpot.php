@@ -1,9 +1,9 @@
 <?php
 
-namespace Nbutl\NovaSiteCore\Models;
+namespace Nbutl\NovaAdmin\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Nbutl\NovaSiteCore\Services\AdService;
+use Nbutl\NovaAdmin\Services\AdService;
 
 class AdSpot extends Model
 {

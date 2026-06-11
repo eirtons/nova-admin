@@ -1,9 +1,9 @@
 <?php
 
-namespace Nbutl\NovaSiteCore\Facades;
+namespace Nbutl\NovaAdmin\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Nbutl\NovaSiteCore\Services\SitemapService;
+use Nbutl\NovaAdmin\Services\SitemapService;
 
 /**
  * @method static void register(callable $provider)
@@ -11,7 +11,7 @@ use Nbutl\NovaSiteCore\Services\SitemapService;
  * @method static string build()
  * @method static void forget()
  *
- * @see \Nbutl\NovaSiteCore\Services\SitemapService
+ * @see \Nbutl\NovaAdmin\Services\SitemapService
  */
 class Sitemap extends Facade
 {

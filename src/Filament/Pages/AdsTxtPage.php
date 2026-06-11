@@ -1,6 +1,6 @@
 <?php
 
-namespace Nbutl\NovaSiteCore\Filament\Pages;
+namespace Nbutl\NovaAdmin\Filament\Pages;
 
 use BackedEnum;
 use Filament\Forms\Components\Textarea;
@@ -10,7 +10,7 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Nbutl\NovaSiteCore\Services\PublicTextFileService;
+use Nbutl\NovaAdmin\Services\PublicTextFileService;
 
 class AdsTxtPage extends Page implements HasSchemas
 {
@@ -22,7 +22,7 @@ class AdsTxtPage extends Page implements HasSchemas
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 
-    protected string $view = 'nova-site-core::filament.pages.text-file';
+    protected string $view = 'nova-admin::filament.pages.text-file';
 
     public ?array $data = [];
 
@@ -34,7 +34,7 @@ class AdsTxtPage extends Page implements HasSchemas
 
     public static function getNavigationGroup(): ?string
     {
-        return config('nova-site-core.navigation.group');
+        return config('nova-admin.navigation.group');
     }
 
     public function mount(): void
@@ -67,7 +67,7 @@ class AdsTxtPage extends Page implements HasSchemas
     protected function helperText(): string
     {
         $file = str_replace('_', '.', $this->configType);
-        $emptyBehavior = config("nova-site-core.{$this->configType}.empty_behavior") === 'delete'
+        $emptyBehavior = config("nova-admin.{$this->configType}.empty_behavior") === 'delete'
             ? '删除该文件'
             : '清空该文件';
 

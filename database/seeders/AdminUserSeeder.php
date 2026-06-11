@@ -1,6 +1,6 @@
 <?php
 
-namespace Nbutl\NovaSiteCore\Database\Seeders;
+namespace Nbutl\NovaAdmin\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -17,7 +17,7 @@ class AdminUserSeeder extends Seeder
 
     public function run(): void
     {
-        $conf = config('nova-site-core.admin');
+        $conf = config('nova-admin.admin');
 
         $name     = $conf['default_name'];
         $email    = $conf['default_email'];

@@ -1,6 +1,6 @@
 <?php
 
-namespace Nbutl\NovaSiteCore\Services;
+namespace Nbutl\NovaAdmin\Services;
 
 use Illuminate\Support\Facades\Cache;
 
@@ -28,7 +28,7 @@ class SitemapService
      */
     public function xml(): string
     {
-        $ttl = (int) config('nova-site-core.sitemap.cache_ttl', 1800);
+        $ttl = (int) config('nova-admin.sitemap.cache_ttl', 1800);
 
         if ($ttl <= 0) {
             return $this->build();
@@ -39,7 +39,7 @@ class SitemapService
 
     public function build(): string
     {
-        $entries = (array) config('nova-site-core.sitemap.urls', []);
+        $entries = (array) config('nova-admin.sitemap.urls', []);
 
         foreach ($this->providers as $provider) {
             foreach ($provider() as $entry) {
@@ -102,11 +102,11 @@ class SitemapService
 
     protected function cacheKey(): string
     {
-        return (string) config('nova-site-core.sitemap.cache_key', 'nova_site_core:sitemap');
+        return (string) config('nova-admin.sitemap.cache_key', 'nova_admin:sitemap');
     }
 
     protected function store()
     {
-        return Cache::store(config('nova-site-core.cache.store'));
+        return Cache::store(config('nova-admin.cache.store'));
     }
 }

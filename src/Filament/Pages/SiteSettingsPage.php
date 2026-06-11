@@ -1,6 +1,6 @@
 <?php
 
-namespace Nbutl\NovaSiteCore\Filament\Pages;
+namespace Nbutl\NovaAdmin\Filament\Pages;
 
 use BackedEnum;
 use Filament\Forms\Components\ColorPicker;
@@ -14,7 +14,7 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Nbutl\NovaSiteCore\Services\SiteConfigService;
+use Nbutl\NovaAdmin\Services\SiteConfigService;
 
 class SiteSettingsPage extends Page implements HasSchemas
 {
@@ -26,7 +26,7 @@ class SiteSettingsPage extends Page implements HasSchemas
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCog6Tooth;
 
-    protected string $view = 'nova-site-core::filament.pages.site-settings';
+    protected string $view = 'nova-admin::filament.pages.site-settings';
 
     public ?array $data = [];
 
@@ -46,7 +46,7 @@ class SiteSettingsPage extends Page implements HasSchemas
 
     public static function getNavigationGroup(): ?string
     {
-        return config('nova-site-core.navigation.group');
+        return config('nova-admin.navigation.group');
     }
 
     public function mount(): void
@@ -56,7 +56,7 @@ class SiteSettingsPage extends Page implements HasSchemas
         $this->form->fill(
             collect($this->fields)
                 ->mapWithKeys(function ($meta, $key) use ($config) {
-                    $value = $config->get($key, config("nova-site-core.site_defaults.$key"));
+                    $value = $config->get($key, config("nova-admin.site_defaults.$key"));
 
                     // FileUpload 等组件用 null 表示"未设置"，空字符串会被当作已有文件路径
                     return [$key => blank($value) ? null : $value];

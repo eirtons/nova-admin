@@ -1,6 +1,6 @@
 <?php
 
-namespace Nbutl\NovaSiteCore\Services;
+namespace Nbutl\NovaAdmin\Services;
 
 class SiteConfigService
 {
@@ -84,6 +84,6 @@ class SiteConfigService
 
     protected function modelClass(): string
     {
-        return config('nova-site-core.models.site_config', \Nbutl\NovaSiteCore\Models\SiteConfig::class);
+        return config('nova-admin.models.site_config', \Nbutl\NovaAdmin\Models\SiteConfig::class);
     }
 }

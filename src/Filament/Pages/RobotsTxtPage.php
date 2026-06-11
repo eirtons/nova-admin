@@ -1,6 +1,6 @@
 <?php
 
-namespace Nbutl\NovaSiteCore\Filament\Pages;
+namespace Nbutl\NovaAdmin\Filament\Pages;
 
 use BackedEnum;
 use Filament\Support\Icons\Heroicon;

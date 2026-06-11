@@ -1,6 +1,6 @@
 <?php
 
-namespace Nbutl\NovaSiteCore\Services;
+namespace Nbutl\NovaAdmin\Services;
 
 use Illuminate\Support\Collection;
 
@@ -18,12 +18,12 @@ class LogFileService
      */
     public function files(): Collection
     {
-        $dirs = (array) config('nova-site-core.logs.paths', []);
+        $dirs = (array) config('nova-admin.logs.paths', []);
         if ($dirs === []) {
             $dirs = [storage_path('logs')];
         }
 
-        $pattern = (string) config('nova-site-core.logs.pattern', '*.log');
+        $pattern = (string) config('nova-admin.logs.pattern', '*.log');
 
         return collect($dirs)
             ->flatMap(fn (string $dir): array => glob(rtrim($dir, '/\\').DIRECTORY_SEPARATOR.$pattern) ?: [])
@@ -46,7 +46,7 @@ class LogFileService
      */
     public function entries(?string $path = null, string $keyword = '', ?string $level = null, ?int $limit = null): array
     {
-        $limit ??= max(1, (int) config('nova-site-core.logs.search_limit', 100));
+        $limit ??= max(1, (int) config('nova-admin.logs.search_limit', 100));
         $level = blank($level) ? null : strtoupper($level);
 
         $files = $this->files();
@@ -80,7 +80,7 @@ class LogFileService
      */
     protected function readTail(string $path): string
     {
-        $bytes = max(1, (int) config('nova-site-core.logs.view_tail_kb', 256)) * 1024;
+        $bytes = max(1, (int) config('nova-admin.logs.view_tail_kb', 256)) * 1024;
         $size = (int) filesize($path);
         $truncated = $size > $bytes;
 
