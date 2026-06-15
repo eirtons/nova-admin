@@ -70,15 +70,14 @@ php artisan serve
 ## 三、前台使用
 
 ```blade
-{{-- 广告组件 --}}
-<x-nova-admin::ad position="home_banner1" />
-<x-nova-admin::ad-head position="global_head" />
+{{-- 放在 <head> 内，输出该广告位的 head_code --}}
+<x-ad-head position="global_head" />
+
+{{-- 放在页面展示位置，输出 body_code；无生效广告时不产生 DOM --}}
+<x-ad-body position="home_banner1" />
 ```
 
 ```php
-// helper
-site_ad('home_banner1');         // 输出 body 广告
-site_ad_head('global_head');     // 输出 head 广告
 site_config('site_name');        // 读站点配置
 
 // Facade
@@ -115,7 +114,7 @@ Sitemap::register(fn () => Article::published()->get()->map(fn ($a) => [
 php artisan nova-admin:install                  # 接入 Panel、建表并初始化
 php artisan nova-admin:create-admin [--force]   # 创建/重置默认管理员
 php artisan ad:seed [--off]                     # 填充测试广告（先清空）/ 禁用广告
-php artisan nova-admin:clear-cache              # 清广告与 sitemap 缓存
+php artisan nova-admin:clear-cache              # 清 sitemap 缓存
 ```
 
 ---

@@ -13,7 +13,7 @@ use Nbutl\NovaAdmin\Services\AdService;
 use Nbutl\NovaAdmin\Services\PublicTextFileService;
 use Nbutl\NovaAdmin\Services\SiteConfigService;
 use Nbutl\NovaAdmin\Services\SitemapService;
-use Nbutl\NovaAdmin\View\Components\Ad;
+use Nbutl\NovaAdmin\View\Components\AdBody;
 use Nbutl\NovaAdmin\View\Components\AdHead;
 
 class NovaAdminServiceProvider extends ServiceProvider
@@ -33,8 +33,8 @@ class NovaAdminServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'nova-admin');
 
-        $this->loadViewComponentsAs('nova-admin', [
-            'ad'      => Ad::class,
+        $this->loadViewComponentsAs('', [
+            'ad-body' => AdBody::class,
             'ad-head' => AdHead::class,
         ]);
 

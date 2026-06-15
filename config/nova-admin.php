@@ -49,17 +49,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | 广告缓存
-    |--------------------------------------------------------------------------
-    */
-    'cache' => [
-        'store'      => env('NOVA_CACHE_STORE', null), // null = 项目默认 store
-        'ttl'        => env('NOVA_CACHE_TTL', 3600),    // 秒；0 = 不缓存
-        'key_prefix' => 'nova_admin:ads:',
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
     | ads.txt
     |--------------------------------------------------------------------------
     */
@@ -127,10 +116,11 @@ return [
     |       ->map(fn ($a) => ['loc' => route('articles.show', $a), 'lastmod' => $a->updated_at]));
     */
     'sitemap' => [
-        'enabled'   => true,
-        'cache_ttl' => env('NOVA_SITEMAP_CACHE_TTL', 1800), // 秒；0 = 不缓存
-        'cache_key' => 'nova_admin:sitemap',
-        'urls'      => [
+        'enabled'     => true,
+        'cache_store' => env('NOVA_SITEMAP_CACHE_STORE'),
+        'cache_ttl'   => env('NOVA_SITEMAP_CACHE_TTL', 1800), // 秒；0 = 不缓存
+        'cache_key'   => 'nova_admin:sitemap',
+        'urls'        => [
             ['loc' => '/', 'changefreq' => 'daily', 'priority' => '1.0'],
         ],
     ],

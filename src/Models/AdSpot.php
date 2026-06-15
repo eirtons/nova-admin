@@ -3,7 +3,6 @@
 namespace Nbutl\NovaAdmin\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Nbutl\NovaAdmin\Services\AdService;
 
 class AdSpot extends Model
 {
@@ -19,20 +18,4 @@ class AdSpot extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
-
-    protected static function booted(): void
-    {
-        // 广告保存 / 删除后清除受影响 position 的缓存
-        static::saved(function (self $model) {
-            app(AdService::class)->forgetPosition($model->position);
-
-            if ($model->wasChanged('position')) {
-                app(AdService::class)->forgetPosition($model->getOriginal('position'));
-            }
-        });
-
-        static::deleted(function (self $model) {
-            app(AdService::class)->forgetPosition($model->position);
-        });
-    }
 }

@@ -107,6 +107,6 @@ class SitemapService
 
     protected function store()
     {
-        return Cache::store(config('nova-admin.cache.store'));
+        return Cache::store(config('nova-admin.sitemap.cache_store'));
     }
 }

@@ -13,13 +13,13 @@ if (! function_exists('site_config')) {
 if (! function_exists('site_ad')) {
     function site_ad(string $position): string
     {
-        return app(AdService::class)->renderBody($position);
+        return app(AdService::class)->body($position);
     }
 }
 
 if (! function_exists('site_ad_head')) {
     function site_ad_head(string $position): string
     {
-        return app(AdService::class)->renderHead($position);
+        return app(AdService::class)->head($position);
     }
 }

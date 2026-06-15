@@ -2,11 +2,11 @@
 
 namespace Nbutl\NovaAdmin\View\Components;
 
-use Illuminate\Support\HtmlString;
+use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 use Nbutl\NovaAdmin\Services\AdService;
 
-class AdHead extends Component
+class AdBody extends Component
 {
     public string $html;
 
@@ -14,7 +14,7 @@ class AdHead extends Component
         public string $position,
         AdService $ads,
     ) {
-        $this->html = $ads->head($position);
+        $this->html = $ads->body($position);
     }
 
     public function shouldRender(): bool
@@ -22,8 +22,8 @@ class AdHead extends Component
         return $this->html !== '';
     }
 
-    public function render(): HtmlString
+    public function render(): View
     {
-        return new HtmlString($this->html);
+        return view('nova-admin::components.ad-body');
     }
 }
