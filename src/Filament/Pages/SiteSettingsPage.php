@@ -3,6 +3,7 @@
 namespace Nbutl\NovaAdmin\Filament\Pages;
 
 use BackedEnum;
+use Filament\Forms\Components\BaseFileUpload;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
@@ -87,20 +88,12 @@ class SiteSettingsPage extends Page implements HasSchemas
             }
 
             $components[] = match (true) {
-                $key === 'favicon_path'     => FileUpload::make($key)
-                    ->label($label)
+                $key === 'favicon_path'     => $this->fileUpload($key, $label)
                     ->helperText('支持 .ico / .png / .svg，为空则使用浏览器默认图标')
-                    ->disk('public')
-                    ->directory('site')
-                    ->acceptedFileTypes(['image/x-icon', 'image/png', 'image/svg+xml'])
-                    ->nullable(),
-                $key === 'logo_path'        => FileUpload::make($key)
-                    ->label($label)
+                    ->acceptedFileTypes(['image/x-icon', 'image/png', 'image/svg+xml']),
+                $key === 'logo_path'        => $this->fileUpload($key, $label)
                     ->helperText('上传后在导航栏展示，未上传则不显示')
-                    ->disk('public')
-                    ->directory('site')
-                    ->image()
-                    ->nullable(),
+                    ->image(),
                 $key === 'brand_color'      => ColorPicker::make($key)->label($label),
                 $key === 'meta_description' => Textarea::make($key)->label($label)->rows(3),
                 default                     => TextInput::make($key)->label($label),
@@ -108,6 +101,24 @@ class SiteSettingsPage extends Page implements HasSchemas
         }
 
         return $components;
+    }
+
+    protected function fileUpload(string $key, string $label): FileUpload
+    {
+        return FileUpload::make($key)
+            ->label($label)
+            ->disk('public')
+            ->directory('site')
+            ->getUploadedFileUsing(function (BaseFileUpload $component, string $file, string|array|null $storedFileNames): ?array {
+                $info = $component->getUploadedFile($file, $storedFileNames);
+
+                if ($info) {
+                    $info['url'] = asset('storage/'.$file);
+                }
+
+                return $info;
+            })
+            ->nullable();
     }
 
     public function save(): void
