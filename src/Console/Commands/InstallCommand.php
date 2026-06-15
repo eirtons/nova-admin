@@ -4,11 +4,7 @@ namespace Nbutl\NovaAdmin\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Nbutl\NovaAdmin\Database\Seeders\AdminUserSeeder;
 use Nbutl\NovaAdmin\Models\AdSpot;
-use Nbutl\NovaAdmin\Models\StaticPage;
-use Nbutl\NovaAdmin\Services\PublicTextFileService;
-use Nbutl\NovaAdmin\Services\SiteConfigService;
 use Symfony\Component\Process\Process;
 
 class InstallCommand extends Command
@@ -43,12 +39,8 @@ class InstallCommand extends Command
         // 5. 执行项目全部待运行迁移，确保 users 与包表均已创建
         $this->call('migrate', ['--force' => true]);
 
-        // 6. 生成默认管理员
-        $seeder = new AdminUserSeeder();
-        $seeder->setContainer($this->laravel);
-        $seeder->setCommand($this);
-        $seeder->force = (bool) $this->option('force');
-        $seeder->run();
+        // 6. 数据初始化（管理员、robots.txt、站点默认值、静态页面）
+        $this->call('db:seed', ['--class' => \Nbutl\NovaAdmin\Database\Seeders\NovaAdminSeeder::class, '--force' => true]);
 
         // 7. 仅为空表填充测试广告，避免重复安装覆盖已有数据
         $adModel = AdSpot::class;
@@ -61,35 +53,15 @@ class InstallCommand extends Command
         // 8. 忽略后台生成的公开文本文件，并取消跟踪 Laravel 默认 robots.txt
         $this->ignoreGeneratedPublicFiles();
 
-        // 9. 初始化默认 robots.txt（覆盖 Laravel 自带的占位 public/robots.txt）
-        if (app(SiteConfigService::class)->get('robots_txt_content') === null) {
-            $svc = app(PublicTextFileService::class);
-            $svc->save('robots_txt', $svc->defaultTemplate('robots_txt'));
-            $this->info('已写入默认 robots.txt（Sitemap 按 APP_URL 域名生成）');
-        }
+        // 9. 将 NovaAdminSeeder 注册到宿主项目 DatabaseSeeder
+        $this->registerSeeder();
 
-        // 10. 初始化站点设置默认值（仅写入尚未设置的键）
-        $config = app(SiteConfigService::class);
-        foreach (config('nova-admin.site_defaults', []) as $key => $value) {
-            if ($config->get($key) === null) {
-                $config->set($key, $value);
-                $this->info("已写入站点设置默认值：{$key} = {$value}");
-            }
-        }
-
-        // 11. 初始化预置静态页面（仅创建尚不存在的 slug）
-        if (config('nova-admin.static_pages.enabled', true)) {
-            foreach (config('nova-admin.static_pages.presets', []) as $slug => $title) {
-                StaticPage::firstOrCreate(['slug' => $slug], ['title' => $title]);
-            }
-        }
-
-        // 12. storage 软链（站点设置上传的 Favicon / Logo 经 /storage 访问）
+        // 10. storage 软链（站点设置上传的 Favicon / Logo 经 /storage 访问）
         if (! file_exists(public_path('storage'))) {
             $this->call('storage:link');
         }
 
-        // 13. 完成
+        // 完成
         $this->newLine();
         $this->info('安装完成。nova-admin 已接入 Filament Panel。');
 
@@ -100,6 +72,40 @@ class InstallCommand extends Command
     {
         $this->call('filament:assets');
         $this->call('livewire:publish', ['--assets' => true]);
+        $this->ensureComposerScripts();
+    }
+
+    protected function ensureComposerScripts(): void
+    {
+        $composerPath = base_path('composer.json');
+        $json = json_decode(File::get($composerPath), true);
+
+        $hook = 'post-autoload-dump';
+        $commands = [
+            'livewire:publish' => '@php artisan livewire:publish --assets --quiet',
+            'storage:link' => '@php artisan storage:link --quiet',
+        ];
+
+        $changed = false;
+
+        foreach ($commands as $keyword => $command) {
+            $exists = false;
+            foreach ($json['scripts'][$hook] ?? [] as $script) {
+                if (str_contains($script, $keyword)) {
+                    $exists = true;
+                    break;
+                }
+            }
+            if (! $exists) {
+                $json['scripts'][$hook][] = $command;
+                $changed = true;
+            }
+        }
+
+        if ($changed) {
+            File::put($composerPath, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n");
+            $this->info('已将 livewire:publish、storage:link 加入 composer.json post-autoload-dump 钩子。');
+        }
     }
 
     protected function ignoreGeneratedPublicFiles(): void
@@ -107,7 +113,7 @@ class InstallCommand extends Command
         $gitignorePath = base_path('.gitignore');
         $contents = File::exists($gitignorePath) ? File::get($gitignorePath) : '';
         $lines = preg_split('/\r\n|\r|\n/', $contents) ?: [];
-        $entries = ['/public/robots.txt', '/public/ads.txt', '/public/vendor/livewire'];
+        $entries = ['/public/robots.txt', '/public/ads.txt', '/public/vendor/livewire', '/public/js/filament', '/public/css/filament', '/public/fonts/filament'];
         $missingEntries = array_values(array_diff($entries, $lines));
 
         if ($missingEntries !== []) {
@@ -214,5 +220,42 @@ class InstallCommand extends Command
         );
 
         return false;
+    }
+
+    protected function registerSeeder(): void
+    {
+        $seederFile = database_path('seeders/DatabaseSeeder.php');
+
+        if (! File::exists($seederFile)) {
+            return;
+        }
+
+        $contents = File::get($seederFile);
+
+        if (str_contains($contents, 'NovaAdminSeeder')) {
+            return;
+        }
+
+        $useStatement = 'use Nbutl\\NovaAdmin\\Database\\Seeders\\NovaAdminSeeder;';
+        $callStatement = '        $this->call(NovaAdminSeeder::class);';
+
+        if (! str_contains($contents, $useStatement)) {
+            $contents = preg_replace(
+                '/(namespace\s+[^;]+;\s*)/',
+                "$1\n{$useStatement}\n",
+                $contents,
+                1,
+            );
+        }
+
+        $contents = preg_replace(
+            '/(public\s+function\s+run\s*\(\s*\)\s*:\s*void\s*\{)/',
+            "$1\n{$callStatement}",
+            $contents,
+            1,
+        );
+
+        File::put($seederFile, $contents);
+        $this->info('已将 NovaAdminSeeder 注册到 DatabaseSeeder。');
     }
 }
