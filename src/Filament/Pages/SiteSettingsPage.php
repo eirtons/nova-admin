@@ -4,7 +4,6 @@ namespace Nbutl\NovaAdmin\Filament\Pages;
 
 use BackedEnum;
 use Filament\Forms\Components\BaseFileUpload;
-use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
@@ -42,7 +41,6 @@ class SiteSettingsPage extends Page implements HasSchemas
         'meta_keywords'       => ['Meta 关键词', 'seo'],
         'favicon_path'        => ['Favicon', 'media'],
         'logo_path'           => ['Logo', 'media'],
-        'brand_color'         => ['品牌色', 'brand'],
     ];
 
     public static function getNavigationGroup(): ?string
@@ -73,7 +71,6 @@ class SiteSettingsPage extends Page implements HasSchemas
                 Section::make('基础信息')->schema($this->fieldsFor('basic'))->columns(2),
                 Section::make('SEO 配置')->schema($this->fieldsFor('seo'))->columns(1),
                 Section::make('媒体资源')->schema($this->fieldsFor('media'))->columns(2),
-                Section::make('品牌')->schema($this->fieldsFor('brand')),
             ])
             ->statePath('data');
     }
@@ -94,7 +91,6 @@ class SiteSettingsPage extends Page implements HasSchemas
                 $key === 'logo_path'        => $this->fileUpload($key, $label)
                     ->helperText('上传后在导航栏展示，未上传则不显示')
                     ->image(),
-                $key === 'brand_color'      => ColorPicker::make($key)->label($label),
                 $key === 'meta_description' => Textarea::make($key)->label($label)->rows(3),
                 default                     => TextInput::make($key)->label($label),
             };

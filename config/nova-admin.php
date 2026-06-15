@@ -19,7 +19,7 @@ return [
     */
     'navigation' => [
         'groups' => [
-            'settings' => '站点设置',
+            'settings' => '基础设置',
             'content'  => '内容管理',
             'system'   => '系统',
         ],

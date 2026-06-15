@@ -26,8 +26,11 @@ class InstallCommand extends Command
             return self::FAILURE;
         }
 
-        // 2. 发布配置（迁移由包直接加载，无需发布到项目）
-        $this->call('vendor:publish', ['--tag' => 'nova-admin-config']);
+        // 2. 配置（迁移由包直接加载，无需发布到项目）
+        // mergeConfigFrom 已加载包默认值，宿主项目仅在需要自定义时才发布配置
+        if (! file_exists(config_path('nova-admin.php'))) {
+            $this->info('未发布 config/nova-admin.php，使用包默认配置。如需自定义请运行：php artisan vendor:publish --tag=nova-admin-config');
+        }
 
         // 3. 将插件接到 Filament Panel 配置链尾，确保覆盖 Filament 默认登录页
         if (! $this->registerPanelPlugin()) {
