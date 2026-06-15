@@ -32,7 +32,7 @@ class StaticPageResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return config('nova-admin.navigation.group');
+        return config('nova-admin.navigation.groups.content');
     }
 
     public static function form(Schema $schema): Schema

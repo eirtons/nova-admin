@@ -34,7 +34,7 @@ class AdsTxtPage extends Page implements HasSchemas
 
     public static function getNavigationGroup(): ?string
     {
-        return config('nova-admin.navigation.group');
+        return config('nova-admin.navigation.groups.settings');
     }
 
     public function mount(): void

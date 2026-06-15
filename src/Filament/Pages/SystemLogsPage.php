@@ -49,7 +49,7 @@ class SystemLogsPage extends Page implements HasActions, HasSchemas, HasTable
 
     public static function getNavigationGroup(): ?string
     {
-        return config('nova-admin.navigation.group');
+        return config('nova-admin.navigation.groups.system');
     }
 
     protected function logs(): LogFileService
