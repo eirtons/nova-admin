@@ -13,6 +13,7 @@ use Nbutl\NovaAdmin\Filament\Pages\RobotsTxtPage;
 use Nbutl\NovaAdmin\Filament\Pages\SiteSettingsPage;
 use Nbutl\NovaAdmin\Filament\Pages\SystemLogsPage;
 use Nbutl\NovaAdmin\Filament\Resources\AdSpotResource;
+use Nbutl\NovaAdmin\Filament\Resources\StaticPageResource;
 use Nbutl\NovaAdmin\Http\Middleware\SetAdminLocale;
 
 class NovaAdminPlugin implements Plugin
@@ -48,6 +49,10 @@ class NovaAdminPlugin implements Plugin
     public function register(Panel $panel): void
     {
         $resources = [AdSpotResource::class];
+
+        if (config('nova-admin.static_pages.enabled', true)) {
+            $resources[] = StaticPageResource::class;
+        }
 
         $pages = [SiteSettingsPage::class];
 

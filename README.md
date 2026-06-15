@@ -1,6 +1,6 @@
 # nova-admin
 
-多站点复用的通用后台底座（**Laravel 12 + Filament 5**）：广告管理、站点设置、ads.txt、robots.txt、后台中文、账号密码登录、默认管理员、后台 Logo 跳前台。
+多站点复用的通用后台底座（**Laravel 12 + Filament 5**）：广告管理、站点设置、静态页面、ads.txt、robots.txt、后台中文、账号密码登录、默认管理员、后台 Logo 跳前台。
 
 ---
 ## 一、新建项目从零接入
@@ -42,7 +42,7 @@ php artisan serve
 ```
 
 访问 `http://127.0.0.1:8000/admin` → 用 **nova / nova** 登录，即可看到：
-广告管理、站点设置、Ads.txt、Robots.txt、系统日志五个后台入口。
+广告管理、站点设置、静态页面、Ads.txt、Robots.txt、系统日志六个后台入口。
 
 > 上线前请立即在后台修改默认管理员密码。
 
@@ -54,6 +54,7 @@ php artisan serve
 |------|------|
 | 广告管理（一位多条、按创建顺序输出、启用） | 后台「广告管理」 |
 | 站点设置（基础/SEO/媒体/品牌） | 后台「站点设置」 |
+| 静态页面（关于/隐私/条款等富文本落地页，可增删改） | 后台「静态页面」 |
 | ads.txt 编辑 | 后台「Ads.txt」+ `GET /ads.txt` |
 | robots.txt 编辑（含默认模板） | 后台「Robots.txt」+ `GET /robots.txt` |
 | sitemap.xml（静态条目 + 项目注册动态来源，带缓存） | `GET /sitemap.xml` |
@@ -83,6 +84,35 @@ SiteConfig::get('site_name', 'default');
 SiteConfig::set('site_name', 'My Site');         // string
 SiteConfig::set('ads_enabled', true, 'boolean'); // 按 type 存取
 ```
+
+### 静态页面
+
+后台「静态页面」管理关于、隐私政策、服务条款等富文本落地页。安装时按
+`nova-admin.static_pages.presets` 预置一批页面，后台可继续增删改。
+
+前台按 slug 读取（仅返回**已启用**页面，未找到或已停用返回 `null`）：
+
+```blade
+@php($page = static_page('privacy-policy'))
+
+@if ($page)
+    <h1>{{ $page->title }}</h1>
+    <div class="prose">{!! $page->content !!}</div>
+@endif
+```
+
+对应路由可在项目自行定义，例如：
+
+```php
+// routes/web.php
+Route::get('/page/{slug}', function (string $slug) {
+    abort_unless($page = static_page($slug), 404);
+
+    return view('pages.show', compact('page'));
+})->name('static-page');
+```
+
+> `content` 为富文本 HTML，输出用 `{!! !!}`（内容由后台管理员录入，可信）。
 
 ### Sitemap
 
@@ -128,6 +158,10 @@ php artisan nova-admin:clear-sitemap-cache       # 清 sitemap 缓存
 'admin_brand'  => ['logo_link_to_front' => true, 'front_url' => '/', 'new_tab' => true],
 'ads_txt'      => ['enabled' => true, 'empty_behavior' => 'keep_empty'],
 'robots_txt'   => ['enabled' => true, 'sitemap_url' => null],
+'static_pages' => [
+    'enabled' => true,
+    'presets' => [ /* slug => 标题，安装时预置；置 enabled=false 关闭整个功能 */ ],
+],
 ```
 
 ---

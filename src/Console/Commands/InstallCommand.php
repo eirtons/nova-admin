@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Nbutl\NovaAdmin\Database\Seeders\AdminUserSeeder;
 use Nbutl\NovaAdmin\Models\AdSpot;
+use Nbutl\NovaAdmin\Models\StaticPage;
 use Nbutl\NovaAdmin\Services\PublicTextFileService;
 use Nbutl\NovaAdmin\Services\SiteConfigService;
 use Symfony\Component\Process\Process;
@@ -73,12 +74,19 @@ class InstallCommand extends Command
             }
         }
 
-        // 11. storage 软链（站点设置上传的 Favicon / Logo 经 /storage 访问）
+        // 11. 初始化预置静态页面（仅创建尚不存在的 slug）
+        if (config('nova-admin.static_pages.enabled', true)) {
+            foreach (config('nova-admin.static_pages.presets', []) as $slug => $title) {
+                StaticPage::firstOrCreate(['slug' => $slug], ['title' => $title]);
+            }
+        }
+
+        // 12. storage 软链（站点设置上传的 Favicon / Logo 经 /storage 访问）
         if (! file_exists(public_path('storage'))) {
             $this->call('storage:link');
         }
 
-        // 12. 完成
+        // 13. 完成
         $this->newLine();
         $this->info('安装完成。nova-admin 已接入 Filament Panel。');
 

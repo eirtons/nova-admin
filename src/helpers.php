@@ -1,5 +1,6 @@
 <?php
 
+use Nbutl\NovaAdmin\Models\StaticPage;
 use Nbutl\NovaAdmin\Services\AdService;
 use Nbutl\NovaAdmin\Services\SiteConfigService;
 
@@ -21,5 +22,15 @@ if (! function_exists('site_ad_head')) {
     function site_ad_head(string $position): string
     {
         return app(AdService::class)->head($position);
+    }
+}
+
+if (! function_exists('static_page')) {
+    function static_page(string $slug): ?StaticPage
+    {
+        return StaticPage::query()
+            ->where('slug', $slug)
+            ->where('is_active', true)
+            ->first();
     }
 }
