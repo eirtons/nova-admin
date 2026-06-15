@@ -51,6 +51,7 @@ class StaticPageResource extends Resource
                 ->helperText('页面 URL 标识，仅含字母、数字、连字符，如 privacy-policy')
                 // 标识决定前台链接，编辑已有页面时禁改，避免链接失效
                 ->disabledOn('edit'),
+            // 附件磁盘在 StaticPage 模型的 setUpRichContent() 配置（Filament 5 富文本附件机制）
             RichEditor::make('content')
                 ->label('页面内容')
                 ->columnSpanFull(),
