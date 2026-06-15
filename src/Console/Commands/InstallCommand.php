@@ -32,17 +32,20 @@ class InstallCommand extends Command
             return self::FAILURE;
         }
 
-        // 4. 执行项目全部待运行迁移，确保 users 与包表均已创建
+        // 4. 发布后台静态资源，避免 Web 服务器静态规则拦截 Livewire 动态脚本路由
+        $this->publishFrontendAssets();
+
+        // 5. 执行项目全部待运行迁移，确保 users 与包表均已创建
         $this->call('migrate', ['--force' => true]);
 
-        // 5. 生成默认管理员
+        // 6. 生成默认管理员
         $seeder = new AdminUserSeeder();
         $seeder->setContainer($this->laravel);
         $seeder->setCommand($this);
         $seeder->force = (bool) $this->option('force');
         $seeder->run();
 
-        // 6. 仅为空表填充测试广告，避免重复安装覆盖已有数据
+        // 7. 仅为空表填充测试广告，避免重复安装覆盖已有数据
         $adModel = config('nova-admin.models.ad_spot', \Nbutl\NovaAdmin\Models\AdSpot::class);
         if ($adModel::query()->doesntExist()) {
             $this->call('ad:seed');
@@ -50,17 +53,17 @@ class InstallCommand extends Command
             $this->info('广告数据已存在，跳过测试广告填充。');
         }
 
-        // 7. 忽略后台生成的公开文本文件，并取消跟踪 Laravel 默认 robots.txt
+        // 8. 忽略后台生成的公开文本文件，并取消跟踪 Laravel 默认 robots.txt
         $this->ignoreGeneratedPublicFiles();
 
-        // 8. 初始化默认 robots.txt（覆盖 Laravel 自带的占位 public/robots.txt）
+        // 9. 初始化默认 robots.txt（覆盖 Laravel 自带的占位 public/robots.txt）
         if (app(SiteConfigService::class)->get('robots_txt_content') === null) {
             $svc = app(PublicTextFileService::class);
             $svc->save('robots_txt', $svc->defaultTemplate('robots_txt'));
             $this->info('已写入默认 robots.txt（Sitemap 按 APP_URL 域名生成）');
         }
 
-        // 9. 初始化站点设置默认值（仅写入尚未设置的键）
+        // 10. 初始化站点设置默认值（仅写入尚未设置的键）
         $config = app(SiteConfigService::class);
         foreach (config('nova-admin.site_defaults', []) as $key => $value) {
             if ($config->get($key) === null) {
@@ -69,16 +72,22 @@ class InstallCommand extends Command
             }
         }
 
-        // 10. storage 软链（站点设置上传的 Favicon / Logo 经 /storage 访问）
+        // 11. storage 软链（站点设置上传的 Favicon / Logo 经 /storage 访问）
         if (! file_exists(public_path('storage'))) {
             $this->call('storage:link');
         }
 
-        // 11. 完成
+        // 12. 完成
         $this->newLine();
         $this->info('安装完成。nova-admin 已接入 Filament Panel。');
 
         return self::SUCCESS;
+    }
+
+    protected function publishFrontendAssets(): void
+    {
+        $this->call('filament:assets');
+        $this->call('livewire:publish', ['--assets' => true]);
     }
 
     protected function ignoreGeneratedPublicFiles(): void
@@ -86,14 +95,14 @@ class InstallCommand extends Command
         $gitignorePath = base_path('.gitignore');
         $contents = File::exists($gitignorePath) ? File::get($gitignorePath) : '';
         $lines = preg_split('/\r\n|\r|\n/', $contents) ?: [];
-        $entries = ['/public/robots.txt', '/public/ads.txt'];
+        $entries = ['/public/robots.txt', '/public/ads.txt', '/public/vendor/livewire'];
         $missingEntries = array_values(array_diff($entries, $lines));
 
         if ($missingEntries !== []) {
             $contents = rtrim($contents);
             $contents .= ($contents === '' ? '' : PHP_EOL).implode(PHP_EOL, $missingEntries).PHP_EOL;
             File::put($gitignorePath, $contents);
-            $this->info('已将 public/robots.txt、public/ads.txt 加入 .gitignore。');
+            $this->info('已将公开文本文件和 Livewire 静态资源加入 .gitignore。');
         }
 
         try {

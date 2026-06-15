@@ -30,11 +30,12 @@ php artisan nova-admin:install
 ```
 
 该命令会自动创建并接入默认的 `admin` Panel、发布配置、执行包内及项目待运行迁移、
-创建默认管理员、填充示例广告、初始化 robots.txt 和站点设置，并创建 storage 软链。
+创建默认管理员、填充示例广告、初始化 robots.txt 和站点设置，发布 Filament / Livewire
+静态资源，并创建 storage 软链。
 无需单独安装 Filament Panel，也无需手动修改 `AdminPanelProvider.php`。
 
-安装命令还会将后台生成的 `public/robots.txt`、`public/ads.txt` 加入项目
-`.gitignore`。项目已初始化 Git 时，会同时取消对 Laravel 默认
+安装命令还会将后台生成的 `public/robots.txt`、`public/ads.txt` 和
+`public/vendor/livewire` 加入项目 `.gitignore`。项目已初始化 Git 时，会同时取消对 Laravel 默认
 `public/robots.txt` 的跟踪。
 
 ### 3. 启动验证
@@ -151,14 +152,15 @@ php artisan nova-admin:clear-cache              # 清广告与 sitemap 缓存
 `location` 拦截所有 `.js` 请求，导致 Livewire 的 `/livewire/livewire.js` 路由 404 ——
 表现为**后台登录页点击无反应、所有 Livewire 交互失效**。
 
-如果服务器静态规则会拦截 `/livewire/livewire.js`，部署时把前端资源发布为物理文件：
+`nova-admin:install` 会自动把前端资源发布为物理文件：
 
 ```bash
 php artisan filament:assets             # Filament 静态资源 → public/
 php artisan livewire:publish --assets   # Livewire JS → public/vendor/livewire/
 ```
 
-并确保 `public/vendor/livewire` 归属 web 用户（如 `chown -R www:www public/vendor/livewire`）。
+升级 Filament / Livewire 后需重新执行以上命令，并确保 `public/vendor/livewire` 归属 web
+用户（如 `chown -R www:www public/vendor/livewire`）。
 
 站点设置的 Favicon / Logo 上传存储在 `storage/app/public/site/`，需要 storage 软链
 （`nova-admin:install` 已自动创建；手动执行 `php artisan storage:link`），
