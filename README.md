@@ -100,7 +100,7 @@ Sitemap::register(fn () => Article::published()->get()->map(fn ($a) => [
 ```
 
 输出带缓存（`sitemap.cache_ttl`，默认 1800 秒），内容更新后可执行
-`php artisan nova-admin:clear-cache` 立即刷新；项目自带 sitemap 时置
+`php artisan nova-admin:clear-sitemap-cache` 立即刷新；项目自带 sitemap 时置
 `sitemap.enabled = false` 关闭包路由。
 
 ---
@@ -111,7 +111,7 @@ Sitemap::register(fn () => Article::published()->get()->map(fn ($a) => [
 php artisan nova-admin:install                  # 接入 Panel、建表并初始化
 php artisan nova-admin:create-admin [--force]   # 创建/重置默认管理员
 php artisan ad:seed [--off]                     # 填充测试广告（先清空）/ 禁用广告
-php artisan nova-admin:clear-cache              # 清 sitemap 缓存
+php artisan nova-admin:clear-sitemap-cache       # 清 sitemap 缓存
 ```
 
 ---
@@ -126,9 +126,8 @@ php artisan nova-admin:clear-cache              # 清 sitemap 缓存
 'navigation'   => ['group' => '站点设置', 'sort' => 90],
 'admin'        => ['default_name' => 'nova', 'login_field' => 'name'],
 'admin_brand'  => ['logo_link_to_front' => true, 'front_url' => '/', 'new_tab' => true],
-'ads_txt'      => ['storage' => 'both', 'route_fallback' => true],
-'robots_txt'   => ['storage' => 'both', 'sitemap_url' => null],
-'models'       => [ /* 指向项目子类以替换包模型 */ ],
+'ads_txt'      => ['enabled' => true, 'empty_behavior' => 'keep_empty'],
+'robots_txt'   => ['enabled' => true, 'sitemap_url' => null],
 ```
 
 ---
@@ -136,7 +135,7 @@ php artisan nova-admin:clear-cache              # 清 sitemap 缓存
 ## 六、新项目如何扩展后台功能
 
 - **加纯业务功能**（如 Game / Destination）：项目正常写 Filament Resource/Page，与本包并列注册，互不干扰。
-- **给包的表加字段**：项目写补充 ALTER 迁移加列 + 继承包模型，再用 `config('nova-admin.models.*')` 指向子类。
+- **给包的表加字段**：项目写补充 ALTER 迁移加列，在项目自己的 Resource/Service 中使用扩展后的模型。
 - **简单业务配置**：直接走 `site_configs` 键值（`SiteConfig::set`），无需建表。
 - **定制包页面视图**：发布 `vendor:publish --tag=nova-admin-views` 后修改 Blade。
 

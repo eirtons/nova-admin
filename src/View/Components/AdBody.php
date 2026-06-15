@@ -25,7 +25,7 @@ class AdBody extends Component
     public function render(): HtmlString
     {
         return new HtmlString(
-            '<div style="width:100%!important;text-align:center!important;margin:10px auto!important;overflow:hidden!important">'
+            '<div style="width: 100% !important; text-align: center !important; margin: 10px auto !important; overflow: hidden !important;">'
             .$this->html
             .'</div>'
         );
