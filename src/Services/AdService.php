@@ -2,6 +2,8 @@
 
 namespace Nbutl\NovaAdmin\Services;
 
+use Nbutl\NovaAdmin\Models\AdSpot;
+
 class AdService
 {
     public function body(string $position): string
@@ -20,9 +22,7 @@ class AdService
             return '';
         }
 
-        $model = config('nova-admin.models.ad_spot', \Nbutl\NovaAdmin\Models\AdSpot::class);
-
-        return $model::query()
+        return AdSpot::query()
             ->where('position', $position)
             ->where('is_active', true)
             ->orderBy('id')

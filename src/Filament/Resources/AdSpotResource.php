@@ -20,13 +20,11 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
 use Nbutl\NovaAdmin\Filament\Resources\AdSpotResource\Pages;
+use Nbutl\NovaAdmin\Models\AdSpot;
 
 class AdSpotResource extends Resource
 {
-    public static function getModel(): string
-    {
-        return config('nova-admin.models.ad_spot', \Nbutl\NovaAdmin\Models\AdSpot::class);
-    }
+    protected static ?string $model = AdSpot::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMegaphone;
 
@@ -105,7 +103,6 @@ class AdSpotResource extends Resource
                                 TextEntry::make('head_code')
                                     ->label('')
                                     ->fontFamily('mono')
-                                    ->default('（未配置）')
                                     ->formatStateUsing(fn (?string $state): string => blank($state) ? '（未配置）' : $state)
                                     ->extraAttributes(['class' => 'whitespace-pre-wrap break-all text-xs']),
                             ])
@@ -116,7 +113,6 @@ class AdSpotResource extends Resource
                                 TextEntry::make('body_code')
                                     ->label('')
                                     ->fontFamily('mono')
-                                    ->default('（未配置）')
                                     ->formatStateUsing(fn (?string $state): string => blank($state) ? '（未配置）' : $state)
                                     ->extraAttributes(['class' => 'whitespace-pre-wrap break-all text-xs']),
                             ])

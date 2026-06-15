@@ -2,15 +2,13 @@
 
 namespace Nbutl\NovaAdmin\Services;
 
+use Nbutl\NovaAdmin\Models\SiteConfig;
+
 class SiteConfigService
 {
-    /**
-     * 按 type 转换后返回配置值；key 不存在返回 $default，不抛异常。
-     */
     public function get(string $key, mixed $default = null): mixed
     {
-        $model = $this->modelClass();
-        $row = $model::query()->where('key', $key)->first();
+        $row = SiteConfig::query()->where('key', $key)->first();
 
         if ($row === null) {
             return $default;
@@ -19,17 +17,13 @@ class SiteConfigService
         return $this->cast($row->value, $row->type);
     }
 
-    /**
-     * 按 type 序列化入库；未知 key 默认以 type=string 新建。
-     */
     public function set(string $key, mixed $value, ?string $type = null, ?string $group = null): void
     {
-        $model = $this->modelClass();
-        $existing = $model::query()->where('key', $key)->first();
+        $existing = SiteConfig::query()->where('key', $key)->first();
 
-        $type = $type ?? $existing?->type ?? $this->inferType($value);
+        $type = $type ?? $existing?->type ?? 'string';
 
-        $model::query()->updateOrCreate(
+        SiteConfig::query()->updateOrCreate(
             ['key' => $key],
             [
                 'value' => $this->serialize($value, $type),
@@ -41,7 +35,7 @@ class SiteConfigService
 
     public function forget(string $key): void
     {
-        $this->modelClass()::query()->where('key', $key)->delete();
+        SiteConfig::query()->where('key', $key)->delete();
     }
 
     protected function cast(?string $value, string $type): mixed
@@ -54,7 +48,7 @@ class SiteConfigService
             'boolean' => (bool) ((int) $value),
             'integer' => (int) $value,
             'json'    => json_decode($value, true),
-            default   => $value, // string | text
+            default   => $value,
         };
     }
 
@@ -70,20 +64,5 @@ class SiteConfigService
             'json'    => json_encode($value, JSON_UNESCAPED_UNICODE),
             default   => (string) $value,
         };
-    }
-
-    protected function inferType(mixed $value): string
-    {
-        return match (true) {
-            is_bool($value)             => 'boolean',
-            is_int($value)              => 'integer',
-            is_array($value)            => 'json',
-            default                     => 'string',
-        };
-    }
-
-    protected function modelClass(): string
-    {
-        return config('nova-admin.models.site_config', \Nbutl\NovaAdmin\Models\SiteConfig::class);
     }
 }

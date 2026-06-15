@@ -27,7 +27,7 @@ class SiteSettingsPage extends Page implements HasSchemas
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCog6Tooth;
 
-    protected string $view = 'nova-admin::filament.pages.site-settings';
+    protected string $view = 'nova-admin::filament.pages.form-save';
 
     public ?array $data = [];
 

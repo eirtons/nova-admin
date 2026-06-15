@@ -7,7 +7,7 @@ use Nbutl\NovaAdmin\Services\SitemapService;
 
 class ClearCacheCommand extends Command
 {
-    protected $signature = 'nova-admin:clear-cache';
+    protected $signature = 'nova-admin:clear-sitemap-cache';
 
     protected $description = '清除 sitemap 缓存';
 

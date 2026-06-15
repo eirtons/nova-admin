@@ -22,7 +22,7 @@ class AdsTxtPage extends Page implements HasSchemas
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 
-    protected string $view = 'nova-admin::filament.pages.text-file';
+    protected string $view = 'nova-admin::filament.pages.form-save';
 
     public ?array $data = [];
 

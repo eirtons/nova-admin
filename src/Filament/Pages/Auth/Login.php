@@ -7,17 +7,16 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Component;
 use Illuminate\Validation\ValidationException;
 
-/**
- * 账号 + 密码登录。登录字段由 config('nova-admin.admin.login_field') 决定
- * （name / username / email）。
- */
 class Login extends BaseLogin
 {
+    protected function loginField(): string
+    {
+        return config('nova-admin.admin.login_field', 'name');
+    }
+
     protected function getEmailFormComponent(): Component
     {
-        $field = config('nova-admin.admin.login_field', 'name');
-
-        return TextInput::make($field)
+        return TextInput::make($this->loginField())
             ->label('账号')
             ->required()
             ->validationMessages([
@@ -38,20 +37,18 @@ class Login extends BaseLogin
 
     protected function getCredentialsFromFormData(array $data): array
     {
-        $field = config('nova-admin.admin.login_field', 'name');
+        $field = $this->loginField();
 
         return [
-            $field      => $data[$field] ?? null,
-            'password'  => $data['password'],
+            $field     => $data[$field] ?? null,
+            'password' => $data['password'],
         ];
     }
 
     protected function throwFailureValidationException(): never
     {
-        $field = config('nova-admin.admin.login_field', 'name');
-
         throw ValidationException::withMessages([
-            "data.{$field}" => '账号或密码错误。',
+            "data.{$this->loginField()}" => '账号或密码错误。',
         ]);
     }
 }

@@ -3,6 +3,7 @@
 namespace Nbutl\NovaAdmin\Console\Commands;
 
 use Illuminate\Console\Command;
+use Nbutl\NovaAdmin\Models\AdSpot;
 
 class SeedAdSpotsCommand extends Command
 {
@@ -12,7 +13,7 @@ class SeedAdSpotsCommand extends Command
 
     public function handle(): int
     {
-        $model = config('nova-admin.models.ad_spot', \Nbutl\NovaAdmin\Models\AdSpot::class);
+        $model = AdSpot::class;
 
         if ($this->option('off')) {
             $count = $model::query()->update(['is_active' => false]);

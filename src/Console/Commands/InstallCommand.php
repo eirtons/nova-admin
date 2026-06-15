@@ -5,6 +5,7 @@ namespace Nbutl\NovaAdmin\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Nbutl\NovaAdmin\Database\Seeders\AdminUserSeeder;
+use Nbutl\NovaAdmin\Models\AdSpot;
 use Nbutl\NovaAdmin\Services\PublicTextFileService;
 use Nbutl\NovaAdmin\Services\SiteConfigService;
 use Symfony\Component\Process\Process;
@@ -46,7 +47,7 @@ class InstallCommand extends Command
         $seeder->run();
 
         // 7. 仅为空表填充测试广告，避免重复安装覆盖已有数据
-        $adModel = config('nova-admin.models.ad_spot', \Nbutl\NovaAdmin\Models\AdSpot::class);
+        $adModel = AdSpot::class;
         if ($adModel::query()->doesntExist()) {
             $this->call('ad:seed');
         } else {

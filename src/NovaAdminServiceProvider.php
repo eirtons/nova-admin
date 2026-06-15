@@ -53,14 +53,14 @@ class NovaAdminServiceProvider extends ServiceProvider
 
     protected function registerRoutes(): void
     {
-        if (config('nova-admin.ads_txt.route_fallback')) {
+        if (config('nova-admin.ads_txt.enabled', true)) {
             Route::get('/ads.txt', function (PublicTextFileService $svc) {
                 return response($svc->read('ads_txt'), 200)
                     ->header('Content-Type', 'text/plain; charset=UTF-8');
             })->name('nova-admin.ads-txt');
         }
 
-        if (config('nova-admin.robots_txt.route_fallback')) {
+        if (config('nova-admin.robots_txt.enabled', true)) {
             Route::get('/robots.txt', function (PublicTextFileService $svc) {
                 return response($svc->read('robots_txt'), 200)
                     ->header('Content-Type', 'text/plain; charset=UTF-8');

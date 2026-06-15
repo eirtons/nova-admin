@@ -14,17 +14,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | 模型替换
-    |--------------------------------------------------------------------------
-    | 项目继承包模型扩展后，把这里指向自己的子类，包内部即自动使用项目模型。
-    */
-    'models' => [
-        'ad_spot'     => \Nbutl\NovaAdmin\Models\AdSpot::class,
-        'site_config' => \Nbutl\NovaAdmin\Models\SiteConfig::class,
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
     | 后台导航分组
     |--------------------------------------------------------------------------
     */
@@ -54,8 +43,6 @@ return [
     */
     'ads_txt' => [
         'enabled'        => true,
-        'storage'        => 'both',   // file | database | both
-        'route_fallback' => true,
         'path'           => public_path('ads.txt'),
         'config_key'     => 'ads_txt_content',
         'empty_behavior' => 'keep_empty', // keep_empty | delete
@@ -68,8 +55,6 @@ return [
     */
     'robots_txt' => [
         'enabled'          => true,
-        'storage'          => 'both',
-        'route_fallback'   => true,
         'path'             => public_path('robots.txt'),
         'config_key'       => 'robots_txt_content',
         'empty_behavior'   => 'keep_empty',
