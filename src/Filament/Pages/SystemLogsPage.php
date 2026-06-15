@@ -52,12 +52,17 @@ class SystemLogsPage extends Page implements HasActions, HasSchemas, HasTable
         return config('nova-admin.navigation.group');
     }
 
+    protected function logs(): LogFileService
+    {
+        return app(LogFileService::class);
+    }
+
     public function mount(): void
     {
         $this->entriesLimit = max(1, (int) config('nova-admin.logs.search_limit', 100));
 
         // 默认只看最新的一个文件，避免打开页面就全量查询；下拉可手动切「全部文件」
-        $latest = app(LogFileService::class)->files()->first();
+        $latest = $this->logs()->files()->first();
 
         $this->form->fill([
             'file'    => $latest !== null ? md5($latest['path']) : null,
@@ -73,7 +78,7 @@ class SystemLogsPage extends Page implements HasActions, HasSchemas, HasTable
             ->components([
                 Select::make('file')
                     ->label('日志文件')
-                    ->options(fn (): array => app(LogFileService::class)->files()
+                    ->options(fn (): array => $this->logs()->files()
                         ->mapWithKeys(fn (array $f): array => [md5($f['path']) => $f['name']])
                         ->all())
                     ->placeholder('全部文件'),
@@ -96,7 +101,7 @@ class SystemLogsPage extends Page implements HasActions, HasSchemas, HasTable
 
     public function loadEntries(): void
     {
-        $this->entries = app(LogFileService::class)->entries(
+        $this->entries = $this->logs()->entries(
             path: $this->selectedPath(),
             keyword: trim((string) ($this->data['keyword'] ?? '')),
             level: $this->data['level'] ?? null,
@@ -111,14 +116,14 @@ class SystemLogsPage extends Page implements HasActions, HasSchemas, HasTable
             return null;
         }
 
-        return app(LogFileService::class)->files()
+        return $this->logs()->files()
             ->first(fn (array $f): bool => md5($f['path']) === $key)['path'] ?? null;
     }
 
     public function table(Table $table): Table
     {
         return $table
-            ->records(fn (): Collection => app(LogFileService::class)->files()->keyBy(fn (array $f): string => md5($f['path'])))
+            ->records(fn (): Collection => $this->logs()->files()->keyBy(fn (array $f): string => md5($f['path'])))
             ->columns([
                 TextColumn::make('name')
                     ->label('文件')
@@ -158,7 +163,7 @@ class SystemLogsPage extends Page implements HasActions, HasSchemas, HasTable
                     ->modalDescription(fn (array $record): string => "确认删除 {$record['name']}（".Number::fileSize($record['size'])."）？此操作不可恢复。")
                     ->modalSubmitActionLabel('确认删除')
                     ->action(function (array $record): void {
-                        app(LogFileService::class)->delete($record['path']);
+                        $this->logs()->delete($record['path']);
 
                         Notification::make()->title('日志已删除')->success()->send();
 
