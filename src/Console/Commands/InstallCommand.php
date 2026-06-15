@@ -140,10 +140,22 @@ class InstallCommand extends Command
             return true;
         }
 
-        $this->info('未检测到 Filament Panel，正在创建默认 admin Panel...');
+        $panelId = (string) config('nova-admin.panel.id', 'admin');
+        $this->info("未检测到 Filament Panel，正在创建 {$panelId} Panel...");
+
+        return $this->createPanel($panelId);
+    }
+
+    protected function createPanel(string $panelId): bool
+    {
+        if ($this->call('make:filament-panel', [
+            'id' => $panelId,
+            '--no-interaction' => true,
+        ]) !== self::SUCCESS) {
+            return false;
+        }
 
         return $this->call('filament:install', [
-            '--panels' => true,
             '--no-interaction' => true,
         ]) === self::SUCCESS;
     }
