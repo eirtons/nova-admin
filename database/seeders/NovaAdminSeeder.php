@@ -3,19 +3,40 @@
 namespace Nbutl\NovaAdmin\Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use RuntimeException;
 use Nbutl\NovaAdmin\Models\StaticPage;
 use Nbutl\NovaAdmin\Services\PublicTextFileService;
 use Nbutl\NovaAdmin\Services\SiteConfigService;
 
 class NovaAdminSeeder extends Seeder
 {
+    /** 是否覆盖已存在管理员的密码（由命令 --force 透传）。 */
+    public bool $force = false;
+
     public function run(): void
     {
-        $this->call(AdminUserSeeder::class);
+        if (! $this->runAdminSeeder()) {
+            throw new RuntimeException('默认管理员创建失败。');
+        }
 
         $this->initRobotsTxt();
         $this->initSiteDefaults();
         $this->initStaticPages();
+    }
+
+    protected function runAdminSeeder(): bool
+    {
+        $seeder = new AdminUserSeeder();
+        $seeder->force = $this->force;
+
+        if (isset($this->container)) {
+            $seeder->setContainer($this->container);
+        }
+        if (isset($this->command)) {
+            $seeder->setCommand($this->command);
+        }
+
+        return $seeder->run();
     }
 
     protected function initRobotsTxt(): void

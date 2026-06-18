@@ -15,7 +15,7 @@ class AdminUserSeeder extends Seeder
     /** 是否覆盖已存在账号的密码（由命令 --force 透传）。 */
     public bool $force = false;
 
-    public function run(): void
+    public function run(): bool
     {
         $conf = config('nova-admin.admin');
 
@@ -47,7 +47,7 @@ class AdminUserSeeder extends Seeder
             if ($existing && ! $this->force) {
                 $this->command?->warn("管理员账号 {$name} 已存在，未覆盖（使用 --force 可重置密码）。");
 
-                return;
+                return true;
             }
 
             $userModel::query()->updateOrCreate(
@@ -60,12 +60,16 @@ class AdminUserSeeder extends Seeder
             if (app()->environment('production')) {
                 $this->command?->warn('当前为 production 环境，默认管理员为 nova/nova，请立即登录后台修改密码！');
             }
+
+            return true;
         } catch (\Illuminate\Database\QueryException $e) {
             $this->command?->error(
                 "无法自动创建管理员：users 表可能存在必填业务字段。\n".
                 "请手动创建管理员，或为相关字段设默认值后重试。\n".
                 '原始错误：'.$e->getMessage()
             );
+
+            return false;
         }
     }
 }

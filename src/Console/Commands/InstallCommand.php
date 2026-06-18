@@ -4,6 +4,7 @@ namespace Nbutl\NovaAdmin\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use Nbutl\NovaAdmin\Database\Seeders\NovaAdminSeeder;
 use Nbutl\NovaAdmin\Models\AdSpot;
 use Symfony\Component\Process\Process;
 
@@ -40,7 +41,9 @@ class InstallCommand extends Command
         $this->call('migrate', ['--force' => true]);
 
         // 6. 数据初始化（管理员、robots.txt、站点默认值、静态页面）
-        $this->call('db:seed', ['--class' => \Nbutl\NovaAdmin\Database\Seeders\NovaAdminSeeder::class, '--force' => true]);
+        if (! $this->seedNovaAdminData()) {
+            return self::FAILURE;
+        }
 
         // 7. 仅为空表填充测试广告，避免重复安装覆盖已有数据
         $adModel = AdSpot::class;
@@ -77,10 +80,20 @@ class InstallCommand extends Command
 
     protected function ensureComposerScripts(): void
     {
-        $composerPath = base_path('composer.json');
-        $json = json_decode(File::get($composerPath), true);
+        $composerPath = $this->composerJsonPath();
+        $json = json_decode(file_get_contents($composerPath), true);
+        if (! is_array($json)) {
+            return;
+        }
 
         $hook = 'post-autoload-dump';
+        $scripts = $json['scripts'][$hook] ?? [];
+        if (is_string($scripts)) {
+            $scripts = [$scripts];
+        } elseif (! is_array($scripts)) {
+            $scripts = [];
+        }
+
         $commands = [
             'livewire:publish' => '@php artisan livewire:publish --assets --quiet',
             'storage:link' => '@php artisan storage:link --quiet',
@@ -90,22 +103,52 @@ class InstallCommand extends Command
 
         foreach ($commands as $keyword => $command) {
             $exists = false;
-            foreach ($json['scripts'][$hook] ?? [] as $script) {
+            foreach ($scripts as $script) {
                 if (str_contains($script, $keyword)) {
                     $exists = true;
                     break;
                 }
             }
             if (! $exists) {
-                $json['scripts'][$hook][] = $command;
+                $scripts[] = $command;
                 $changed = true;
             }
         }
 
         if ($changed) {
-            File::put($composerPath, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n");
+            $json['scripts'][$hook] = $scripts;
+            file_put_contents($composerPath, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n");
             $this->info('已将 livewire:publish、storage:link 加入 composer.json post-autoload-dump 钩子。');
         }
+    }
+
+    protected function composerJsonPath(): string
+    {
+        return base_path('composer.json');
+    }
+
+    protected function seedNovaAdminData(): bool
+    {
+        try {
+            $seeder = $this->makeNovaAdminSeeder();
+            if ($this->laravel !== null) {
+                $seeder->setContainer($this->laravel);
+            }
+            $seeder->setCommand($this);
+            $seeder->force = (bool) $this->option('force');
+            $seeder->run();
+
+            return true;
+        } catch (\Throwable $e) {
+            $this->error($e->getMessage());
+
+            return false;
+        }
+    }
+
+    protected function makeNovaAdminSeeder(): NovaAdminSeeder
+    {
+        return new NovaAdminSeeder();
     }
 
     protected function ignoreGeneratedPublicFiles(): void

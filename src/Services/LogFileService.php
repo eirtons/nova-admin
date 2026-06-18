@@ -114,6 +114,12 @@ class LogFileService
             $firstLine = $eol === false ? $chunk : substr($chunk, 0, $eol);
 
             if (! preg_match('/^\[([^\]]+)\]\s+\w+\.(\w+):\s?(.*)$/', $firstLine, $m)) {
+                foreach (preg_split('/\r\n|\r|\n/', trim($chunk)) ?: [] as $line) {
+                    if (trim($line) !== '') {
+                        $entries[] = $this->fallbackEntry($line);
+                    }
+                }
+
                 continue;
             }
 
@@ -164,8 +170,13 @@ class LogFileService
                     'message' => mb_strimwidth(trim($m[3]), 0, 300, '…'),
                     'detail'  => rtrim($line),
                 ];
-            } elseif ($current !== null && strlen($current['detail']) < self::DETAIL_MAX_BYTES * 2) {
-                $current['detail'] .= "\n".rtrim($line);
+            } elseif ($current !== null) {
+                if (strlen($current['detail']) < self::DETAIL_MAX_BYTES * 2) {
+                    $current['detail'] .= "\n".rtrim($line);
+                }
+            } elseif (trim($line) !== '') {
+                $current = $this->fallbackEntry($line);
+                $finish();
             }
         }
 
@@ -173,6 +184,18 @@ class LogFileService
         fclose($fp);
 
         return $matches;
+    }
+
+    protected function fallbackEntry(string $line): array
+    {
+        $line = trim($line);
+
+        return [
+            'time'    => '',
+            'level'   => 'DEBUG',
+            'message' => mb_strimwidth($line, 0, 300, '…'),
+            'detail'  => $this->capDetail($line),
+        ];
     }
 
     protected function capDetail(string $detail): string

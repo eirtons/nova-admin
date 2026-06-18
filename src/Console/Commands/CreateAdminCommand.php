@@ -13,12 +13,18 @@ class CreateAdminCommand extends Command
 
     public function handle(): int
     {
-        $seeder = new AdminUserSeeder();
-        $seeder->setContainer($this->laravel);
+        $seeder = $this->makeAdminUserSeeder();
+        if ($this->laravel !== null) {
+            $seeder->setContainer($this->laravel);
+        }
         $seeder->setCommand($this);
         $seeder->force = (bool) $this->option('force');
-        $seeder->run();
 
-        return self::SUCCESS;
+        return $seeder->run() ? self::SUCCESS : self::FAILURE;
+    }
+
+    protected function makeAdminUserSeeder(): AdminUserSeeder
+    {
+        return new AdminUserSeeder();
     }
 }
