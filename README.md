@@ -156,7 +156,7 @@ php artisan nova-admin:clear-sitemap-cache       # 清 sitemap 缓存
 'navigation'   => ['group' => '站点设置', 'sort' => 90],
 'admin'        => ['default_name' => 'nova', 'login_field' => 'name'],
 'admin_brand'  => ['logo_link_to_front' => true, 'front_url' => '/', 'new_tab' => true],
-'ads_txt'      => ['enabled' => true, 'empty_behavior' => 'keep_empty'],
+'ads_txt'      => ['enabled' => true, 'empty_behavior' => 'delete'],
 'robots_txt'   => ['enabled' => true, 'sitemap_url' => null],
 'static_pages' => [
     'enabled' => true,

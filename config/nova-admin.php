@@ -49,7 +49,7 @@ return [
         'enabled'        => true,
         'path'           => public_path('ads.txt'),
         'config_key'     => 'ads_txt_content',
-        'empty_behavior' => 'keep_empty', // keep_empty | delete
+        'empty_behavior' => 'delete', // keep_empty | delete
     ],
 
     /*
