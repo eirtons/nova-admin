@@ -22,10 +22,29 @@ class NovaAdminServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/nova-admin.php', 'nova-admin');
 
+        $this->defaultLogChannelToDaily();
+
         $this->app->singleton(SiteConfigService::class);
         $this->app->singleton(AdService::class);
         $this->app->singleton(PublicTextFileService::class);
         $this->app->singleton(SitemapService::class);
+    }
+
+    /**
+     * 让基座默认按天切割日志：把出厂 single channel（无论被 default 直接用，
+     * 还是被 stack 引用，二者都是 Laravel 默认）就地切成 daily。
+     * 宿主只要把它换成别的 driver（syslog/外部服务等），就不再命中、不做改动。
+     */
+    protected function defaultLogChannelToDaily(): void
+    {
+        if (config('logging.channels.single.driver') !== 'single') {
+            return;
+        }
+
+        config([
+            'logging.channels.single.driver' => 'daily',
+            'logging.channels.single.days'   => (int) env('LOG_DAILY_DAYS', 14),
+        ]);
     }
 
     public function boot(): void
