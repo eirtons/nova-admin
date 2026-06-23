@@ -64,6 +64,11 @@ return [
         'empty_behavior'   => 'keep_empty',
         'sitemap_url'      => null,   // null = url('/sitemap.xml')
         'default_template' => null,   // null = 内置模板
+        // robots 内容含 {url} 占位符，须按运行时域名解析。route_only=true 时
+        // 只存 DB、不落 public 静态文件，强制走 /robots.txt 路由动态输出，
+        // 避免 Nginx 优先返回静态文件、把域名冻结在某次保存时的请求域名上。
+        // 部署须确保 public/ 下无手写 robots.txt（否则仍被 Web 服务器优先返回）。
+        'route_only'       => true,
     ],
 
     /*

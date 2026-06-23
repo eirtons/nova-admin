@@ -27,6 +27,7 @@ class PublicTextFileServiceTest extends TestCase
         File::ensureDirectoryExists($this->tempDir);
 
         config(['nova-admin.ads_txt.path' => $this->tempDir.'/ads.txt']);
+        config(['nova-admin.robots_txt.path' => $this->tempDir.'/robots.txt']);
     }
 
     protected function tearDown(): void
@@ -45,5 +46,20 @@ class PublicTextFileServiceTest extends TestCase
         app(PublicTextFileService::class)->save('ads_txt', '');
 
         $this->assertFileDoesNotExist(config('nova-admin.ads_txt.path'));
+    }
+
+    public function test_route_only_robots_does_not_write_static_file_and_clears_stale_one(): void
+    {
+        // 历史遗留的静态文件（如早期手写）
+        File::put(config('nova-admin.robots_txt.path'), 'stale content');
+
+        $svc = app(PublicTextFileService::class);
+        $svc->save('robots_txt', "User-agent: *\nSitemap: {url}/sitemap.xml");
+
+        // route_only：不落静态文件，旧文件被清掉，请求始终走路由
+        $this->assertFileDoesNotExist(config('nova-admin.robots_txt.path'));
+
+        // read() 走 DB 并动态替换 {url}（绝对 URL，按运行时域名）
+        $this->assertStringContainsString(rtrim(url('/'), '/').'/sitemap.xml', $svc->read('robots_txt'));
     }
 }
