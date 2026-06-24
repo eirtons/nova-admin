@@ -1,6 +1,6 @@
 <?php
 
-namespace Nova\NovaAdmin\Filament\Pages;
+namespace Inova\NovaAdmin\Filament\Pages;
 
 use BackedEnum;
 use Filament\Forms\Components\Textarea;
@@ -10,7 +10,7 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Nova\NovaAdmin\Services\PublicTextFileService;
+use Inova\NovaAdmin\Services\PublicTextFileService;
 
 class AdsTxtPage extends Page implements HasSchemas
 {

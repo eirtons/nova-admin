@@ -1,20 +1,20 @@
 <?php
 
-namespace Nova\NovaAdmin;
+namespace Inova\NovaAdmin;
 
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Support\HtmlString;
-use Nova\NovaAdmin\Filament\Pages\AdsTxtPage;
-use Nova\NovaAdmin\Filament\Pages\Auth\Login;
-use Nova\NovaAdmin\Filament\Pages\RobotsTxtPage;
-use Nova\NovaAdmin\Filament\Pages\SiteSettingsPage;
-use Nova\NovaAdmin\Filament\Pages\SystemLogsPage;
-use Nova\NovaAdmin\Filament\Resources\AdSpotResource;
-use Nova\NovaAdmin\Filament\Resources\StaticPageResource;
-use Nova\NovaAdmin\Http\Middleware\SetAdminLocale;
+use Inova\NovaAdmin\Filament\Pages\AdsTxtPage;
+use Inova\NovaAdmin\Filament\Pages\Auth\Login;
+use Inova\NovaAdmin\Filament\Pages\RobotsTxtPage;
+use Inova\NovaAdmin\Filament\Pages\SiteSettingsPage;
+use Inova\NovaAdmin\Filament\Pages\SystemLogsPage;
+use Inova\NovaAdmin\Filament\Resources\AdSpotResource;
+use Inova\NovaAdmin\Filament\Resources\StaticPageResource;
+use Inova\NovaAdmin\Http\Middleware\SetAdminLocale;
 
 class NovaAdminPlugin implements Plugin
 {

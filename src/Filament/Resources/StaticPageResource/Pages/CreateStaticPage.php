@@ -1,9 +1,9 @@
 <?php
 
-namespace Nova\NovaAdmin\Filament\Resources\StaticPageResource\Pages;
+namespace Inova\NovaAdmin\Filament\Resources\StaticPageResource\Pages;
 
 use Filament\Resources\Pages\CreateRecord;
-use Nova\NovaAdmin\Filament\Resources\StaticPageResource;
+use Inova\NovaAdmin\Filament\Resources\StaticPageResource;
 
 class CreateStaticPage extends CreateRecord
 {

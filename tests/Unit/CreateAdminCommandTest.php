@@ -1,9 +1,9 @@
 <?php
 
-namespace Nova\NovaAdmin\Tests\Unit;
+namespace Inova\NovaAdmin\Tests\Unit;
 
-use Nova\NovaAdmin\Console\Commands\CreateAdminCommand;
-use Nova\NovaAdmin\Database\Seeders\AdminUserSeeder;
+use Inova\NovaAdmin\Console\Commands\CreateAdminCommand;
+use Inova\NovaAdmin\Database\Seeders\AdminUserSeeder;
 use PHPUnit\Framework\TestCase;
 
 class CreateAdminCommandTest extends TestCase

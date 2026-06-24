@@ -1,12 +1,12 @@
 <?php
 
-namespace Nova\NovaAdmin\Tests\Feature;
+namespace Inova\NovaAdmin\Tests\Feature;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Nova\NovaAdmin\Models\AdSpot;
-use Nova\NovaAdmin\NovaAdminServiceProvider;
-use Nova\NovaAdmin\Services\AdService;
+use Inova\NovaAdmin\Models\AdSpot;
+use Inova\NovaAdmin\NovaAdminServiceProvider;
+use Inova\NovaAdmin\Services\AdService;
 use Orchestra\Testbench\TestCase;
 
 class AdComponentTest extends TestCase

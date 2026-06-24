@@ -1,11 +1,11 @@
 <?php
 
-namespace Nova\NovaAdmin\Tests\Feature;
+namespace Inova\NovaAdmin\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
-use Nova\NovaAdmin\NovaAdminServiceProvider;
-use Nova\NovaAdmin\Services\PublicTextFileService;
+use Inova\NovaAdmin\NovaAdminServiceProvider;
+use Inova\NovaAdmin\Services\PublicTextFileService;
 use Orchestra\Testbench\TestCase;
 
 class PublicTextFileServiceTest extends TestCase

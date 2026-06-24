@@ -1,6 +1,6 @@
 <?php
 
-namespace Nova\NovaAdmin\Http\Middleware;
+namespace Inova\NovaAdmin\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;

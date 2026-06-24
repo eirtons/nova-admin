@@ -1,10 +1,10 @@
 <?php
 
-namespace Nova\NovaAdmin\View\Components;
+namespace Inova\NovaAdmin\View\Components;
 
 use Illuminate\Support\HtmlString;
 use Illuminate\View\Component;
-use Nova\NovaAdmin\Services\AdService;
+use Inova\NovaAdmin\Services\AdService;
 
 class AdHead extends Component
 {

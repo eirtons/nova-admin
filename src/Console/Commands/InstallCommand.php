@@ -1,11 +1,11 @@
 <?php
 
-namespace Nova\NovaAdmin\Console\Commands;
+namespace Inova\NovaAdmin\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Nova\NovaAdmin\Database\Seeders\NovaAdminSeeder;
-use Nova\NovaAdmin\Models\AdSpot;
+use Inova\NovaAdmin\Database\Seeders\NovaAdminSeeder;
+use Inova\NovaAdmin\Models\AdSpot;
 use Symfony\Component\Process\Process;
 
 class InstallCommand extends Command
@@ -242,7 +242,7 @@ class InstallCommand extends Command
             $updated = preg_replace_callback(
                 '/(return\s+\$panel\b.*?)(;\s*\r?\n\s*})/s',
                 fn (array $matches): string => $matches[1]
-                    ."\n            ->plugin(\\Nova\\NovaAdmin\\NovaAdminPlugin::make())"
+                    ."\n            ->plugin(\\Inova\\NovaAdmin\\NovaAdminPlugin::make())"
                     .$matches[2],
                 $contents,
                 1,
@@ -279,7 +279,7 @@ class InstallCommand extends Command
             return;
         }
 
-        $useStatement = 'use Nova\\NovaAdmin\\Database\\Seeders\\NovaAdminSeeder;';
+        $useStatement = 'use Inova\\NovaAdmin\\Database\\Seeders\\NovaAdminSeeder;';
         $callStatement = '        $this->call(NovaAdminSeeder::class);';
 
         if (! str_contains($contents, $useStatement)) {

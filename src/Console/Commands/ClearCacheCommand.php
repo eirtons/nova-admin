@@ -1,9 +1,9 @@
 <?php
 
-namespace Nova\NovaAdmin\Console\Commands;
+namespace Inova\NovaAdmin\Console\Commands;
 
 use Illuminate\Console\Command;
-use Nova\NovaAdmin\Services\SitemapService;
+use Inova\NovaAdmin\Services\SitemapService;
 
 class ClearCacheCommand extends Command
 {

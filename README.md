@@ -11,7 +11,7 @@
 composer create-project laravel/laravel:^12.0 mysite
 cd mysite
 
-composer require nova/nova-admin
+composer require inova/nova-admin
 ```
 
 不指定版本号时，Composer 会安装 Packagist 上兼容当前项目的最新稳定版本。
@@ -79,7 +79,7 @@ php artisan serve
 site_config('site_name');        // 读站点配置
 
 // Facade
-use Nova\NovaAdmin\Facades\SiteConfig;
+use Inova\NovaAdmin\Facades\SiteConfig;
 SiteConfig::get('site_name', 'default');
 SiteConfig::set('site_name', 'My Site');         // string
 SiteConfig::set('ads_enabled', true, 'boolean'); // 按 type 存取
@@ -120,7 +120,7 @@ Route::get('/page/{slug}', function (string $slug) {
 `nova-admin.sitemap.urls` 配置；动态内容在项目 `AppServiceProvider::boot` 注册：
 
 ```php
-use Nova\NovaAdmin\Facades\Sitemap;
+use Inova\NovaAdmin\Facades\Sitemap;
 
 Sitemap::register(fn () => Article::published()->get()->map(fn ($a) => [
     'loc'      => route('articles.show', $a),
@@ -201,6 +201,6 @@ php artisan livewire:publish --assets   # Livewire JS → public/vendor/livewire
 ## 升级
 
 ```bash
-composer update nova/nova-admin
+composer update inova/nova-admin
 php artisan migrate
 ```

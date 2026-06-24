@@ -1,6 +1,6 @@
 <?php
 
-namespace Nova\NovaAdmin\Models;
+namespace Inova\NovaAdmin\Models;
 
 use Illuminate\Database\Eloquent\Model;
 

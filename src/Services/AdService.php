@@ -1,8 +1,8 @@
 <?php
 
-namespace Nova\NovaAdmin\Services;
+namespace Inova\NovaAdmin\Services;
 
-use Nova\NovaAdmin\Models\AdSpot;
+use Inova\NovaAdmin\Models\AdSpot;
 
 class AdService
 {

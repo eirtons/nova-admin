@@ -1,8 +1,8 @@
 <?php
 
-use Nova\NovaAdmin\Models\StaticPage;
-use Nova\NovaAdmin\Services\AdService;
-use Nova\NovaAdmin\Services\SiteConfigService;
+use Inova\NovaAdmin\Models\StaticPage;
+use Inova\NovaAdmin\Services\AdService;
+use Inova\NovaAdmin\Services\SiteConfigService;
 
 if (! function_exists('site_config')) {
     function site_config(string $key, mixed $default = null): mixed

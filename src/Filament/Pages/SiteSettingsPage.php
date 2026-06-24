@@ -1,6 +1,6 @@
 <?php
 
-namespace Nova\NovaAdmin\Filament\Pages;
+namespace Inova\NovaAdmin\Filament\Pages;
 
 use BackedEnum;
 use Filament\Forms\Components\BaseFileUpload;
@@ -14,7 +14,7 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Nova\NovaAdmin\Services\SiteConfigService;
+use Inova\NovaAdmin\Services\SiteConfigService;
 
 class SiteSettingsPage extends Page implements HasSchemas
 {

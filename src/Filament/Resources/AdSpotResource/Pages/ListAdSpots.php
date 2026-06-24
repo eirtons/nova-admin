@@ -1,10 +1,10 @@
 <?php
 
-namespace Nova\NovaAdmin\Filament\Resources\AdSpotResource\Pages;
+namespace Inova\NovaAdmin\Filament\Resources\AdSpotResource\Pages;
 
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
-use Nova\NovaAdmin\Filament\Resources\AdSpotResource;
+use Inova\NovaAdmin\Filament\Resources\AdSpotResource;
 
 class ListAdSpots extends ListRecords
 {

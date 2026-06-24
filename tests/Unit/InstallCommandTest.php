@@ -1,9 +1,9 @@
 <?php
 
-namespace Nova\NovaAdmin\Tests\Unit;
+namespace Inova\NovaAdmin\Tests\Unit;
 
-use Nova\NovaAdmin\Console\Commands\InstallCommand;
-use Nova\NovaAdmin\Database\Seeders\NovaAdminSeeder;
+use Inova\NovaAdmin\Console\Commands\InstallCommand;
+use Inova\NovaAdmin\Database\Seeders\NovaAdminSeeder;
 use PHPUnit\Framework\TestCase;
 
 class InstallCommandTest extends TestCase

@@ -1,8 +1,8 @@
 <?php
 
-namespace Nova\NovaAdmin\Tests\Unit;
+namespace Inova\NovaAdmin\Tests\Unit;
 
-use Nova\NovaAdmin\Services\LogFileService;
+use Inova\NovaAdmin\Services\LogFileService;
 use PHPUnit\Framework\TestCase;
 
 class LogFileServiceTest extends TestCase

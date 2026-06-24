@@ -1,8 +1,8 @@
 <?php
 
-namespace Nova\NovaAdmin\Services;
+namespace Inova\NovaAdmin\Services;
 
-use Nova\NovaAdmin\Models\SiteConfig;
+use Inova\NovaAdmin\Models\SiteConfig;
 
 class SiteConfigService
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Nova\NovaAdmin\Services;
+namespace Inova\NovaAdmin\Services;
 
 use Illuminate\Support\Facades\File;
 

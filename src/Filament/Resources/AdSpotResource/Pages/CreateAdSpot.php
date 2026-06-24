@@ -1,9 +1,9 @@
 <?php
 
-namespace Nova\NovaAdmin\Filament\Resources\AdSpotResource\Pages;
+namespace Inova\NovaAdmin\Filament\Resources\AdSpotResource\Pages;
 
 use Filament\Resources\Pages\CreateRecord;
-use Nova\NovaAdmin\Filament\Resources\AdSpotResource;
+use Inova\NovaAdmin\Filament\Resources\AdSpotResource;
 
 class CreateAdSpot extends CreateRecord
 {

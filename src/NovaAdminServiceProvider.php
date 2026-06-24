@@ -1,20 +1,20 @@
 <?php
 
-namespace Nova\NovaAdmin;
+namespace Inova\NovaAdmin;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use Nova\NovaAdmin\Console\Commands\ClearCacheCommand;
-use Nova\NovaAdmin\Console\Commands\CreateAdminCommand;
-use Nova\NovaAdmin\Console\Commands\InstallCommand;
-use Nova\NovaAdmin\Console\Commands\SeedAdSpotsCommand;
-use Nova\NovaAdmin\Services\AdService;
-use Nova\NovaAdmin\Services\PublicTextFileService;
-use Nova\NovaAdmin\Services\SiteConfigService;
-use Nova\NovaAdmin\Services\SitemapService;
-use Nova\NovaAdmin\View\Components\AdBody;
-use Nova\NovaAdmin\View\Components\AdHead;
+use Inova\NovaAdmin\Console\Commands\ClearCacheCommand;
+use Inova\NovaAdmin\Console\Commands\CreateAdminCommand;
+use Inova\NovaAdmin\Console\Commands\InstallCommand;
+use Inova\NovaAdmin\Console\Commands\SeedAdSpotsCommand;
+use Inova\NovaAdmin\Services\AdService;
+use Inova\NovaAdmin\Services\PublicTextFileService;
+use Inova\NovaAdmin\Services\SiteConfigService;
+use Inova\NovaAdmin\Services\SitemapService;
+use Inova\NovaAdmin\View\Components\AdBody;
+use Inova\NovaAdmin\View\Components\AdHead;
 
 class NovaAdminServiceProvider extends ServiceProvider
 {

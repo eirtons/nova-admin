@@ -1,6 +1,6 @@
 <?php
 
-namespace Nova\NovaAdmin\Models;
+namespace Inova\NovaAdmin\Models;
 
 use Filament\Forms\Components\RichEditor\Models\Concerns\InteractsWithRichContent;
 use Filament\Forms\Components\RichEditor\Models\Contracts\HasRichContent;

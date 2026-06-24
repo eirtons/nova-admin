@@ -1,10 +1,10 @@
 <?php
 
-namespace Nova\NovaAdmin\Filament\Resources\StaticPageResource\Pages;
+namespace Inova\NovaAdmin\Filament\Resources\StaticPageResource\Pages;
 
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
-use Nova\NovaAdmin\Filament\Resources\StaticPageResource;
+use Inova\NovaAdmin\Filament\Resources\StaticPageResource;
 
 class EditStaticPage extends EditRecord
 {

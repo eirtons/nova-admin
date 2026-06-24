@@ -1,6 +1,6 @@
 <?php
 
-namespace Nova\NovaAdmin\Filament\Resources;
+namespace Inova\NovaAdmin\Filament\Resources;
 
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -15,8 +15,8 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
-use Nova\NovaAdmin\Filament\Resources\StaticPageResource\Pages;
-use Nova\NovaAdmin\Models\StaticPage;
+use Inova\NovaAdmin\Filament\Resources\StaticPageResource\Pages;
+use Inova\NovaAdmin\Models\StaticPage;
 
 class StaticPageResource extends Resource
 {

@@ -1,10 +1,10 @@
 <?php
 
-namespace Nova\NovaAdmin\Filament\Resources\AdSpotResource\Pages;
+namespace Inova\NovaAdmin\Filament\Resources\AdSpotResource\Pages;
 
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
-use Nova\NovaAdmin\Filament\Resources\AdSpotResource;
+use Inova\NovaAdmin\Filament\Resources\AdSpotResource;
 
 class EditAdSpot extends EditRecord
 {

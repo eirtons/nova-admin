@@ -1,9 +1,9 @@
 <?php
 
-namespace Nova\NovaAdmin\Facades;
+namespace Inova\NovaAdmin\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Nova\NovaAdmin\Services\SitemapService;
+use Inova\NovaAdmin\Services\SitemapService;
 
 /**
  * @method static void register(callable $provider)
@@ -11,7 +11,7 @@ use Nova\NovaAdmin\Services\SitemapService;
  * @method static string build()
  * @method static void forget()
  *
- * @see \Nova\NovaAdmin\Services\SitemapService
+ * @see \Inova\NovaAdmin\Services\SitemapService
  */
 class Sitemap extends Facade
 {
