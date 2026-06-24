@@ -279,7 +279,7 @@ class InstallCommand extends Command
             return;
         }
 
-        $useStatement = 'use Nova\NovaAdmin\\Database\\Seeders\\NovaAdminSeeder;';
+        $useStatement = 'use Nova\\NovaAdmin\\Database\\Seeders\\NovaAdminSeeder;';
         $callStatement = '        $this->call(NovaAdminSeeder::class);';
 
         if (! str_contains($contents, $useStatement)) {
