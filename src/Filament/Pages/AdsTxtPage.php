@@ -58,21 +58,11 @@ class AdsTxtPage extends Page implements HasSchemas
                 Textarea::make('content')
                     ->label($this->fieldLabel)
                     ->rows(14)
-                    ->placeholder($this->placeholder)
-                    ->helperText($this->helperText()),
+                    ->placeholder($this->placeholder),
             ])
             ->statePath('data');
     }
 
-    protected function helperText(): string
-    {
-        $file = str_replace('_', '.', $this->configType);
-        $emptyBehavior = config("nova-admin.{$this->configType}.empty_behavior") === 'delete'
-            ? '删除该文件'
-            : '清空该文件';
-
-        return "保存后写入 public/{$file} 并同步数据库，前台 GET /{$file} 直接访问；内容清空并保存则{$emptyBehavior}。";
-    }
 
     public function save(): void
     {
