@@ -1,8 +1,8 @@
 <?php
 
-namespace Nbutl\NovaAdmin\Services;
+namespace Nova\NovaAdmin\Services;
 
-use Nbutl\NovaAdmin\Models\AdSpot;
+use Nova\NovaAdmin\Models\AdSpot;
 
 class AdService
 {

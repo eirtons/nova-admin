@@ -1,6 +1,6 @@
 <?php
 
-namespace Nbutl\NovaAdmin\Http\Middleware;
+namespace Nova\NovaAdmin\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;

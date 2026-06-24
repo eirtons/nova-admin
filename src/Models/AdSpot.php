@@ -1,6 +1,6 @@
 <?php
 
-namespace Nbutl\NovaAdmin\Models;
+namespace Nova\NovaAdmin\Models;
 
 use Illuminate\Database\Eloquent\Model;
 

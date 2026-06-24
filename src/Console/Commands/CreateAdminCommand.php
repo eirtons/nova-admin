@@ -1,9 +1,9 @@
 <?php
 
-namespace Nbutl\NovaAdmin\Console\Commands;
+namespace Nova\NovaAdmin\Console\Commands;
 
 use Illuminate\Console\Command;
-use Nbutl\NovaAdmin\Database\Seeders\AdminUserSeeder;
+use Nova\NovaAdmin\Database\Seeders\AdminUserSeeder;
 
 class CreateAdminCommand extends Command
 {

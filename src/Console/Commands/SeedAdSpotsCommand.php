@@ -1,9 +1,9 @@
 <?php
 
-namespace Nbutl\NovaAdmin\Console\Commands;
+namespace Nova\NovaAdmin\Console\Commands;
 
 use Illuminate\Console\Command;
-use Nbutl\NovaAdmin\Models\AdSpot;
+use Nova\NovaAdmin\Models\AdSpot;
 
 class SeedAdSpotsCommand extends Command
 {

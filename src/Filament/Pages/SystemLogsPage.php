@@ -1,6 +1,6 @@
 <?php
 
-namespace Nbutl\NovaAdmin\Filament\Pages;
+namespace Nova\NovaAdmin\Filament\Pages;
 
 use BackedEnum;
 use Filament\Actions\Action;
@@ -21,7 +21,7 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Number;
-use Nbutl\NovaAdmin\Services\LogFileService;
+use Nova\NovaAdmin\Services\LogFileService;
 
 class SystemLogsPage extends Page implements HasActions, HasSchemas, HasTable
 {

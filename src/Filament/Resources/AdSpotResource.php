@@ -1,6 +1,6 @@
 <?php
 
-namespace Nbutl\NovaAdmin\Filament\Resources;
+namespace Nova\NovaAdmin\Filament\Resources;
 
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -19,8 +19,8 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
-use Nbutl\NovaAdmin\Filament\Resources\AdSpotResource\Pages;
-use Nbutl\NovaAdmin\Models\AdSpot;
+use Nova\NovaAdmin\Filament\Resources\AdSpotResource\Pages;
+use Nova\NovaAdmin\Models\AdSpot;
 
 class AdSpotResource extends Resource
 {

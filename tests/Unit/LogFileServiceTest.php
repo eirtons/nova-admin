@@ -1,8 +1,8 @@
 <?php
 
-namespace Nbutl\NovaAdmin\Tests\Unit;
+namespace Nova\NovaAdmin\Tests\Unit;
 
-use Nbutl\NovaAdmin\Services\LogFileService;
+use Nova\NovaAdmin\Services\LogFileService;
 use PHPUnit\Framework\TestCase;
 
 class LogFileServiceTest extends TestCase

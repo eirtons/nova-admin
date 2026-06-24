@@ -1,9 +1,9 @@
 <?php
 
-namespace Nbutl\NovaAdmin\Filament\Resources\AdSpotResource\Pages;
+namespace Nova\NovaAdmin\Filament\Resources\AdSpotResource\Pages;
 
 use Filament\Resources\Pages\CreateRecord;
-use Nbutl\NovaAdmin\Filament\Resources\AdSpotResource;
+use Nova\NovaAdmin\Filament\Resources\AdSpotResource;
 
 class CreateAdSpot extends CreateRecord
 {

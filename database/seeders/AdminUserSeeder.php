@@ -1,6 +1,6 @@
 <?php
 
-namespace Nbutl\NovaAdmin\Database\Seeders;
+namespace Nova\NovaAdmin\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;

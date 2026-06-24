@@ -1,10 +1,10 @@
 <?php
 
-namespace Nbutl\NovaAdmin\View\Components;
+namespace Nova\NovaAdmin\View\Components;
 
 use Illuminate\Support\HtmlString;
 use Illuminate\View\Component;
-use Nbutl\NovaAdmin\Services\AdService;
+use Nova\NovaAdmin\Services\AdService;
 
 class AdHead extends Component
 {

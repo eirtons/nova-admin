@@ -1,10 +1,10 @@
 <?php
 
-namespace Nbutl\NovaAdmin\Filament\Resources\StaticPageResource\Pages;
+namespace Nova\NovaAdmin\Filament\Resources\StaticPageResource\Pages;
 
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
-use Nbutl\NovaAdmin\Filament\Resources\StaticPageResource;
+use Nova\NovaAdmin\Filament\Resources\StaticPageResource;
 
 class ListStaticPages extends ListRecords
 {

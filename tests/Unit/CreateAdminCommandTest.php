@@ -1,9 +1,9 @@
 <?php
 
-namespace Nbutl\NovaAdmin\Tests\Unit;
+namespace Nova\NovaAdmin\Tests\Unit;
 
-use Nbutl\NovaAdmin\Console\Commands\CreateAdminCommand;
-use Nbutl\NovaAdmin\Database\Seeders\AdminUserSeeder;
+use Nova\NovaAdmin\Console\Commands\CreateAdminCommand;
+use Nova\NovaAdmin\Database\Seeders\AdminUserSeeder;
 use PHPUnit\Framework\TestCase;
 
 class CreateAdminCommandTest extends TestCase

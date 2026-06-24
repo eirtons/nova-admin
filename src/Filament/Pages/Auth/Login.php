@@ -1,6 +1,6 @@
 <?php
 
-namespace Nbutl\NovaAdmin\Filament\Pages\Auth;
+namespace Nova\NovaAdmin\Filament\Pages\Auth;
 
 use Filament\Auth\Pages\Login as BaseLogin;
 use Filament\Forms\Components\TextInput;

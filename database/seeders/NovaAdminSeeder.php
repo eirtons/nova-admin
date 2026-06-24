@@ -1,12 +1,12 @@
 <?php
 
-namespace Nbutl\NovaAdmin\Database\Seeders;
+namespace Nova\NovaAdmin\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use RuntimeException;
-use Nbutl\NovaAdmin\Models\StaticPage;
-use Nbutl\NovaAdmin\Services\PublicTextFileService;
-use Nbutl\NovaAdmin\Services\SiteConfigService;
+use Nova\NovaAdmin\Models\StaticPage;
+use Nova\NovaAdmin\Services\PublicTextFileService;
+use Nova\NovaAdmin\Services\SiteConfigService;
 
 class NovaAdminSeeder extends Seeder
 {

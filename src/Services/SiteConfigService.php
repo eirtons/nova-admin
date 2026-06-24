@@ -1,8 +1,8 @@
 <?php
 
-namespace Nbutl\NovaAdmin\Services;
+namespace Nova\NovaAdmin\Services;
 
-use Nbutl\NovaAdmin\Models\SiteConfig;
+use Nova\NovaAdmin\Models\SiteConfig;
 
 class SiteConfigService
 {
