@@ -14,18 +14,11 @@ class InstallCommandTest extends TestCase
         {
             public array $calls = [];
 
-            public bool $composerScriptsEnsured = false;
-
             public function call($command, array $arguments = [])
             {
                 $this->calls[] = [$command, $arguments];
 
                 return self::SUCCESS;
-            }
-
-            protected function ensureComposerScripts(): void
-            {
-                $this->composerScriptsEnsured = true;
             }
 
             public function publishFrontendAssetsForTest(): void
@@ -40,7 +33,6 @@ class InstallCommandTest extends TestCase
             ['filament:assets', []],
             ['livewire:publish', ['--assets' => true]],
         ], $command->calls);
-        $this->assertTrue($command->composerScriptsEnsured);
     }
 
     public function test_it_creates_the_configured_panel_without_interaction(): void
@@ -72,51 +64,6 @@ class InstallCommandTest extends TestCase
                 '--no-interaction' => true,
             ]],
         ], $command->calls);
-    }
-
-    public function test_it_appends_composer_scripts_when_hook_is_a_string(): void
-    {
-        $path = tempnam(sys_get_temp_dir(), 'nova-admin-composer-');
-        file_put_contents($path, json_encode([
-            'scripts' => [
-                'post-autoload-dump' => '@php artisan package:discover --ansi',
-            ],
-        ]));
-
-        $command = new class($path) extends InstallCommand
-        {
-            public function __construct(private string $path)
-            {
-                parent::__construct();
-            }
-
-            public function ensureComposerScriptsForTest(): void
-            {
-                $this->ensureComposerScripts();
-            }
-
-            protected function composerJsonPath(): string
-            {
-                return $this->path;
-            }
-
-            public function info($string, $verbosity = null): void
-            {
-                //
-            }
-        };
-
-        $command->ensureComposerScriptsForTest();
-
-        $json = json_decode(file_get_contents($path), true);
-
-        $this->assertSame([
-            '@php artisan package:discover --ansi',
-            '@php artisan livewire:publish --assets --quiet',
-            '@php artisan storage:link --quiet',
-        ], $json['scripts']['post-autoload-dump']);
-
-        @unlink($path);
     }
 
     public function test_it_patches_the_default_user_model_for_filament_access(): void

@@ -187,56 +187,6 @@ PHP;
     {
         $this->call('filament:assets');
         $this->call('livewire:publish', ['--assets' => true]);
-        $this->ensureComposerScripts();
-    }
-
-    protected function ensureComposerScripts(): void
-    {
-        $composerPath = $this->composerJsonPath();
-        $json = json_decode(file_get_contents($composerPath), true);
-        if (! is_array($json)) {
-            return;
-        }
-
-        $hook = 'post-autoload-dump';
-        $scripts = $json['scripts'][$hook] ?? [];
-        if (is_string($scripts)) {
-            $scripts = [$scripts];
-        } elseif (! is_array($scripts)) {
-            $scripts = [];
-        }
-
-        $commands = [
-            'livewire:publish' => '@php artisan livewire:publish --assets --quiet',
-            'storage:link' => '@php artisan storage:link --quiet',
-        ];
-
-        $changed = false;
-
-        foreach ($commands as $keyword => $command) {
-            $exists = false;
-            foreach ($scripts as $script) {
-                if (str_contains($script, $keyword)) {
-                    $exists = true;
-                    break;
-                }
-            }
-            if (! $exists) {
-                $scripts[] = $command;
-                $changed = true;
-            }
-        }
-
-        if ($changed) {
-            $json['scripts'][$hook] = $scripts;
-            file_put_contents($composerPath, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n");
-            $this->info('已将 livewire:publish、storage:link 加入 composer.json post-autoload-dump 钩子。');
-        }
-    }
-
-    protected function composerJsonPath(): string
-    {
-        return base_path('composer.json');
     }
 
     protected function seedNovaAdminData(): bool

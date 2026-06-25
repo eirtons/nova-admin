@@ -17,6 +17,6 @@ class RobotsTxtPage extends AdsTxtPage
 
     protected string $fieldLabel = 'Robots.txt 内容';
 
-    protected string $placeholder = "User-agent: *\nAllow: /\nDisallow: /admin\n\nSitemap: {url}/sitemap.xml";
+    protected string $placeholder = "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /login\n\nSitemap: {url}/sitemap.xml";
 
 }

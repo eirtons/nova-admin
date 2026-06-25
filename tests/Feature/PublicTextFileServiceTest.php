@@ -62,4 +62,13 @@ class PublicTextFileServiceTest extends TestCase
         // read() 走 DB 并动态替换 {url}（绝对 URL，按运行时域名）
         $this->assertStringContainsString(rtrim(url('/'), '/').'/sitemap.xml', $svc->read('robots_txt'));
     }
+
+    public function test_default_robots_blocks_admin_and_login_without_exposing_quick_login(): void
+    {
+        $content = app(PublicTextFileService::class)->defaultTemplate('robots_txt');
+
+        $this->assertStringContainsString("Disallow: /admin\n", $content);
+        $this->assertStringContainsString("Disallow: /login\n", $content);
+        $this->assertStringNotContainsString('quick-login', $content);
+    }
 }

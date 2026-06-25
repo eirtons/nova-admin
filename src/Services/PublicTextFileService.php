@@ -115,7 +115,7 @@ class PublicTextFileService
 
             $sitemap = $conf['sitemap_url'] ?: '{url}/sitemap.xml';
 
-            return "User-agent: *\nAllow: /\nDisallow: /admin\n\nSitemap: ".$sitemap."\n";
+            return "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /login\n\nSitemap: ".$sitemap."\n";
         }
 
         return '';

@@ -3,6 +3,7 @@
 namespace Inova\NovaAdmin;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Inova\NovaAdmin\Console\Commands\ClearCacheCommand;
@@ -67,7 +68,43 @@ class NovaAdminServiceProvider extends ServiceProvider
                 SeedAdSpotsCommand::class,
                 ClearCacheCommand::class,
             ]);
+
+            $this->ensureLivewireAssetsPublished();
         }
+    }
+
+    protected function ensureLivewireAssetsPublished(): void
+    {
+        $source = $this->livewireAssetsSourcePath();
+        $target = $this->livewireAssetsTargetPath();
+
+        if (! is_file($source.'/manifest.json')) {
+            return;
+        }
+
+        $sourceManifest = file_get_contents($source.'/manifest.json');
+        $targetManifest = is_file($target.'/manifest.json')
+            ? file_get_contents($target.'/manifest.json')
+            : null;
+
+        if ($sourceManifest === $targetManifest) {
+            return;
+        }
+
+        File::ensureDirectoryExists($target);
+        File::copyDirectory($source, $target);
+    }
+
+    protected function livewireAssetsSourcePath(): string
+    {
+        // Keep this intentionally narrow: nova-admin only mirrors Livewire's
+        // versioned dist assets. Filament assets stay on Filament's own command.
+        return base_path('vendor/livewire/livewire/dist');
+    }
+
+    protected function livewireAssetsTargetPath(): string
+    {
+        return public_path('vendor/livewire');
     }
 
     protected function registerRoutes(): void
