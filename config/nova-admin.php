@@ -107,15 +107,23 @@ return [
     | presets 为安装时预置的页面，结构 slug => [英文标签, 中文备注]：
     | 英文标签存为 title（前台展示用），中文备注仅后台标签页显示，便于辨认。
     | 后台标签页渲染为「About（关于我们）」。前台读取：static_page('about')->content。
+    |
+    | 安装时若 resources/defaults/static-pages/{slug}.html 存在，会读取该模板、
+    | 替换占位符（{{site_name}} / {{site_description}} / {{contact_email}}）后写入
+    | content，作为 AdSense 合规初稿（隐私政策含 Cookie / AdSense / GDPR 措辞）。
+    | site_description 为站点业务一句话描述，由各站点在此填写。
     */
     'static_pages' => [
         'enabled' => true,
+        'site_description' => env('NOVA_SITE_DESCRIPTION', 'an online service'),
         'presets' => [
             'about'            => ['About', '关于我们'],
             'contact'          => ['Contact', '联系我们'],
             'privacy-policy'   => ['Privacy Policy', '隐私政策'],
             'terms-of-service' => ['Terms of Service', '服务条款'],
             'disclaimer'       => ['Disclaimer', '免责声明'],
+            'faq'              => ['FAQ', '常见问题'],
+            'dmca'             => ['DMCA', 'DMCA 版权'],
         ],
     ],
 

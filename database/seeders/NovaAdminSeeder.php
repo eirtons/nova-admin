@@ -68,8 +68,31 @@ class NovaAdminSeeder extends Seeder
             return;
         }
 
+        $config = app(SiteConfigService::class);
+        $replacements = [
+            '{{site_name}}'        => $config->get('site_name') ?: 'this website',
+            '{{site_description}}' => config('nova-admin.static_pages.site_description', 'an online service'),
+            '{{contact_email}}'    => $config->get('contact_email', config('nova-admin.site_defaults.contact_email', '')),
+        ];
+
         foreach (config('nova-admin.static_pages.presets', []) as $slug => $p) {
-            StaticPage::firstOrCreate(['slug' => $slug], ['title' => $p[0]]);
+            // 仅新建时预置合规模板初稿；已存在记录不覆盖用户已编辑内容
+            StaticPage::firstOrCreate(['slug' => $slug], [
+                'title'   => $p[0],
+                'content' => $this->staticPageTemplate($slug, $replacements),
+            ]);
         }
+    }
+
+    /** 读取包内合规模板并替换占位符；无模板时返回 null（页面留空待编辑）。 */
+    protected function staticPageTemplate(string $slug, array $replacements): ?string
+    {
+        $path = __DIR__.'/../../resources/defaults/static-pages/'.$slug.'.html';
+
+        if (! is_file($path)) {
+            return null;
+        }
+
+        return strtr((string) file_get_contents($path), $replacements);
     }
 }

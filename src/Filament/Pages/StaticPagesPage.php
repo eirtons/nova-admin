@@ -8,9 +8,12 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Text;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\TextSize;
+use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use Inova\NovaAdmin\Models\StaticPage;
 
@@ -25,6 +28,9 @@ class StaticPagesPage extends Page implements HasSchemas
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 
     protected string $view = 'nova-admin::filament.pages.static-pages';
+
+    // 给编辑器足够宽度但不贴边铺满（7xl≈80rem）；不够宽改 Full，太宽降到 6xl/5xl
+    protected Width|string|null $maxContentWidth = Width::SevenExtraLarge;
 
     public ?array $data = [];
 
@@ -53,7 +59,9 @@ class StaticPagesPage extends Page implements HasSchemas
     public function form(Schema $schema): Schema
     {
         $tabs = collect($this->presets())
-            ->map(fn (array $p, string $slug) => Tabs\Tab::make("{$p[0]}（{$p[1]}）")->schema([
+            // 标签只显示英文（紧凑不溢出），中文名以说明文字置于编辑器上方
+            ->map(fn (array $p, string $slug) => Tabs\Tab::make($p[0])->schema([
+                Text::make($p[1])->color('gray')->size(TextSize::Small),
                 // statePath 为页面 data 数组，不挂在 StaticPage 模型上，须显式指定
                 // public 磁盘，与模型 setUpRichContent() 一致，保证前台 /storage 取得到附件
                 RichEditor::make($slug)
