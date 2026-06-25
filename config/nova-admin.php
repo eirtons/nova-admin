@@ -104,17 +104,18 @@ return [
     |--------------------------------------------------------------------------
     | 静态页面（关于 / 隐私政策 / 服务条款等富文本落地页）
     |--------------------------------------------------------------------------
-    | presets 为安装时预置的页面（slug => 标题）；后台可继续增删改。
-    | 前台读取：static_page('about')->content。
+    | presets 为安装时预置的页面，结构 slug => [英文标签, 中文备注]：
+    | 英文标签存为 title（前台展示用），中文备注仅后台标签页显示，便于辨认。
+    | 后台标签页渲染为「About（关于我们）」。前台读取：static_page('about')->content。
     */
     'static_pages' => [
         'enabled' => true,
         'presets' => [
-            'about'            => '关于我们',
-            'contact'          => '联系我们',
-            'privacy-policy'   => '隐私政策',
-            'terms-of-service' => '服务条款',
-            'disclaimer'       => '免责声明',
+            'about'            => ['About', '关于我们'],
+            'contact'          => ['Contact', '联系我们'],
+            'privacy-policy'   => ['Privacy Policy', '隐私政策'],
+            'terms-of-service' => ['Terms of Service', '服务条款'],
+            'disclaimer'       => ['Disclaimer', '免责声明'],
         ],
     ],
 

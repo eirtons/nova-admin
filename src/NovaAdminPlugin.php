@@ -11,9 +11,9 @@ use Inova\NovaAdmin\Filament\Pages\AdsTxtPage;
 use Inova\NovaAdmin\Filament\Pages\Auth\Login;
 use Inova\NovaAdmin\Filament\Pages\RobotsTxtPage;
 use Inova\NovaAdmin\Filament\Pages\SiteSettingsPage;
+use Inova\NovaAdmin\Filament\Pages\StaticPagesPage;
 use Inova\NovaAdmin\Filament\Pages\SystemLogsPage;
 use Inova\NovaAdmin\Filament\Resources\AdSpotResource;
-use Inova\NovaAdmin\Filament\Resources\StaticPageResource;
 use Inova\NovaAdmin\Http\Middleware\SetAdminLocale;
 
 class NovaAdminPlugin implements Plugin
@@ -50,12 +50,11 @@ class NovaAdminPlugin implements Plugin
     {
         $resources = [AdSpotResource::class];
 
-        if (config('nova-admin.static_pages.enabled', true)) {
-            $resources[] = StaticPageResource::class;
-        }
-
         $pages = [SiteSettingsPage::class];
 
+        if (config('nova-admin.static_pages.enabled', true)) {
+            $pages[] = StaticPagesPage::class;
+        }
         if (config('nova-admin.ads_txt.enabled', true)) {
             $pages[] = AdsTxtPage::class;
         }

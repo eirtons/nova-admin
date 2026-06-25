@@ -68,8 +68,8 @@ class NovaAdminSeeder extends Seeder
             return;
         }
 
-        foreach (config('nova-admin.static_pages.presets', []) as $slug => $title) {
-            StaticPage::firstOrCreate(['slug' => $slug], ['title' => $title]);
+        foreach (config('nova-admin.static_pages.presets', []) as $slug => $p) {
+            StaticPage::firstOrCreate(['slug' => $slug], ['title' => $p[0]]);
         }
     }
 }
