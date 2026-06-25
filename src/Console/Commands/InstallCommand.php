@@ -18,34 +18,37 @@ class InstallCommand extends Command
     {
         $this->info('开始安装 nova-admin...');
 
-        // 1. 新项目尚无 Panel 时，自动创建默认 admin Panel
+        // 新项目尚无 Panel 时，自动创建默认 admin Panel
         if (! $this->ensurePanelExists()) {
             return self::FAILURE;
         }
 
-        // 2. 配置（迁移由包直接加载，无需发布到项目）
+        // 配置（迁移由包直接加载，无需发布到项目）
         // mergeConfigFrom 已加载包默认值，宿主项目仅在需要自定义时才发布配置
         if (! file_exists(config_path('nova-admin.php'))) {
             $this->info('未发布 config/nova-admin.php，使用包默认配置。如需自定义请运行：php artisan vendor:publish --tag=nova-admin-config');
         }
 
-        // 3. 将插件接到 Filament Panel 配置链尾，确保覆盖 Filament 默认登录页
+        // 将插件接到 Filament Panel 配置链尾，确保覆盖 Filament 默认登录页
         if (! $this->registerPanelPlugin()) {
             return self::FAILURE;
         }
 
-        // 4. 发布后台静态资源，避免 Web 服务器静态规则拦截 Livewire 动态脚本路由
+        // 确保默认用户模型允许访问 Filament Panel，避免生产后台登录后 403
+        $this->ensureFilamentUserAccess();
+
+        // 发布后台静态资源，避免 Web 服务器静态规则拦截 Livewire 动态脚本路由
         $this->publishFrontendAssets();
 
-        // 5. 执行项目全部待运行迁移，确保 users 与包表均已创建
+        // 执行项目全部待运行迁移，确保 users 与包表均已创建
         $this->call('migrate', ['--force' => true]);
 
-        // 6. 数据初始化（管理员、robots.txt、站点默认值、静态页面）
+        // 数据初始化（管理员、robots.txt、站点默认值、静态页面）
         if (! $this->seedNovaAdminData()) {
             return self::FAILURE;
         }
 
-        // 7. 仅为空表填充测试广告，避免重复安装覆盖已有数据
+        // 仅为空表填充测试广告，避免重复安装覆盖已有数据
         $adModel = AdSpot::class;
         if ($adModel::query()->doesntExist()) {
             $this->call('ad:seed');
@@ -53,13 +56,13 @@ class InstallCommand extends Command
             $this->info('广告数据已存在，跳过测试广告填充。');
         }
 
-        // 8. 忽略后台生成的公开文本文件，并取消跟踪 Laravel 默认 robots.txt
+        // 忽略后台生成的公开文本文件，并取消跟踪 Laravel 默认 robots.txt
         $this->ignoreGeneratedPublicFiles();
 
-        // 9. 将 NovaAdminSeeder 注册到宿主项目 DatabaseSeeder
+        // 将 NovaAdminSeeder 注册到宿主项目 DatabaseSeeder
         $this->registerSeeder();
 
-        // 10. storage 软链（站点设置上传的 Favicon / Logo 经 /storage 访问）
+        // storage 软链（站点设置上传的 Favicon / Logo 经 /storage 访问）
         if (! file_exists(public_path('storage'))) {
             $this->call('storage:link');
         }
@@ -69,6 +72,115 @@ class InstallCommand extends Command
         $this->info('安装完成。nova-admin 已接入 Filament Panel。');
 
         return self::SUCCESS;
+    }
+
+    protected function ensureFilamentUserAccess(): void
+    {
+        if ($this->userModelClass() !== 'App\\Models\\User') {
+            $this->warn('用户模型不是 App\\Models\\User，已跳过自动接入 FilamentUser。');
+
+            return;
+        }
+
+        $path = $this->userModelPath();
+        if (! file_exists($path)) {
+            $this->warn('未找到 app/Models/User.php，已跳过自动接入 FilamentUser。');
+
+            return;
+        }
+
+        $contents = file_get_contents($path);
+        if (! is_string($contents)) {
+            $this->warn('无法读取 User 模型，请手动实现 FilamentUser。');
+
+            return;
+        }
+
+        if (str_contains($contents, 'FilamentUser') && str_contains($contents, 'canAccessPanel')) {
+            return;
+        }
+
+        $updated = $this->ensureUseStatement($contents, 'Filament\\Models\\Contracts\\FilamentUser');
+        $updated = $this->ensureUseStatement($updated, 'Filament\\Panel');
+
+        if (! str_contains($updated, 'implements FilamentUser')) {
+            // 已有 implements：追加到列表末尾；否则给 class 加上 implements 子句
+            $updated = preg_replace(
+                '/class\s+User\s+extends\s+Authenticatable\s+implements\s+([^{\r\n]+)/',
+                'class User extends Authenticatable implements $1, FilamentUser',
+                $updated,
+                1,
+                $count,
+            );
+
+            if ($count !== 1) {
+                $updated = preg_replace(
+                    '/class\s+User\s+extends\s+Authenticatable/',
+                    'class User extends Authenticatable implements FilamentUser',
+                    $updated,
+                    1,
+                    $count,
+                );
+            }
+
+            if ($count !== 1) {
+                $this->warn('无法自动修改 User 模型，请手动实现 FilamentUser。');
+
+                return;
+            }
+        }
+
+        if (! str_contains($updated, 'canAccessPanel')) {
+            $method = <<<'PHP'
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return true;
+    }
+
+PHP;
+            $updated = preg_replace(
+                '/(class\s+User[^{]*\{\s*)/',
+                "$1{$method}",
+                $updated,
+                1,
+                $count,
+            );
+
+            if ($count !== 1) {
+                $this->warn('无法自动添加 canAccessPanel 方法，请手动实现 FilamentUser。');
+
+                return;
+            }
+        }
+
+        file_put_contents($path, $updated);
+        $this->info('已将 App\\Models\\User 接入 FilamentUser，避免后台登录后 403。');
+    }
+
+    protected function ensureUseStatement(string $contents, string $use): string
+    {
+        $statement = "use {$use};";
+        if (str_contains($contents, $statement)) {
+            return $contents;
+        }
+
+        return preg_replace(
+            '/(namespace\s+[^;]+;\s*)/',
+            "$1\n{$statement}\n",
+            $contents,
+            1,
+        ) ?? $contents;
+    }
+
+    protected function userModelClass(): string
+    {
+        return (string) config('auth.providers.users.model', 'App\\Models\\User');
+    }
+
+    protected function userModelPath(): string
+    {
+        return app_path('Models/User.php');
     }
 
     protected function publishFrontendAssets(): void

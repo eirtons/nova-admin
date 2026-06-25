@@ -26,14 +26,17 @@ composer require inova/nova-admin
 php artisan nova-admin:install
 ```
 
-该命令会自动创建并接入默认的 `admin` Panel、发布配置、执行包内及项目待运行迁移、
-创建默认管理员、填充示例广告、初始化 robots.txt 和站点设置，发布 Filament / Livewire
-静态资源，并创建 storage 软链。
+该命令会自动创建并接入默认的 `admin` Panel、执行包内及项目待运行迁移、
+创建默认管理员、初始化 robots.txt 和站点设置、空广告表填充示例广告，发布 Filament / Livewire
+静态资源，并创建 storage 软链。默认使用包内配置；只有需要自定义时才发布
+`config/nova-admin.php`。
 无需单独安装 Filament Panel，也无需手动修改 `AdminPanelProvider.php`。
 
 安装命令还会将后台生成的 `public/robots.txt`、`public/ads.txt` 和
 `public/vendor/livewire` 加入项目 `.gitignore`。项目已初始化 Git 时，会同时取消对 Laravel 默认
 `public/robots.txt` 的跟踪。
+
+生产兜底也在安装时处理：默认 `App\Models\User` 会自动接入 `FilamentUser`。
 
 ### 3. 启动验证
 
@@ -153,7 +156,10 @@ php artisan nova-admin:clear-sitemap-cache       # 清 sitemap 缓存
 ```php
 'panel'        => ['id' => 'admin'],
 'ad_positions' => [ /* 自定义广告位枚举 */ ],
-'navigation'   => ['group' => '站点设置', 'sort' => 90],
+'navigation'   => [
+    'groups' => ['settings' => '基础设置', 'content' => '内容管理', 'system' => '系统'],
+    'sort' => 90,
+],
 'admin'        => ['default_name' => 'nova', 'login_field' => 'name'],
 'admin_brand'  => ['logo_link_to_front' => true, 'front_url' => '/', 'new_tab' => true],
 'ads_txt'      => ['enabled' => true, 'empty_behavior' => 'delete'],
@@ -175,32 +181,17 @@ php artisan nova-admin:clear-sitemap-cache       # 清 sitemap 缓存
 
 ---
 
-## 生产部署注意（必读，否则后台登录会挂）
+## 生产部署 / 升级
 
-本包的后台（含登录页）基于 Filament / Livewire。某些面板生成的 Nginx 配置会用静态
-`location` 拦截所有 `.js` 请求，导致 Livewire 的 `/livewire/livewire.js` 路由 404 ——
-表现为**后台登录页点击无反应、所有 Livewire 交互失效**。
-
-`nova-admin:install` 会自动把前端资源发布为物理文件：
+首次安装用 `composer install`，升级用 `composer update inova/nova-admin`，其余相同：
 
 ```bash
-php artisan filament:assets             # Filament 静态资源 → public/
-php artisan livewire:publish --assets   # Livewire JS → public/vendor/livewire/
+php artisan nova-admin:install --force
+php artisan optimize:clear && php artisan optimize
 ```
 
-升级 Filament / Livewire 后需重新执行以上命令，并确保 `public/vendor/livewire` 归属 web
-用户（如 `chown -R www:www public/vendor/livewire`）。
+`nova-admin:install` 会自动处理 `FilamentUser` 接入（避免后台 403）、发布
+Filament / Livewire 静态资源、`storage:link` 与公开文件忽略。
 
-站点设置的 Favicon / Logo 上传存储在 `storage/app/public/site/`，需要 storage 软链
-（`nova-admin:install` 已自动创建；手动执行 `php artisan storage:link`），
-并保证 `storage/` 归属 web 用户、软链 `public/storage` 随站点一起部署。
-若生产启用了 `opcache.validate_timestamps=0`，更新后还需 reload php-fpm 重置 OPcache。
-
----
-
-## 升级
-
-```bash
-composer update inova/nova-admin
-php artisan migrate
-```
+生产服务器需确保 `storage/`、`public/vendor/livewire` 归属 web 用户。若启用了
+`opcache.validate_timestamps=0`，发布后 reload php-fpm。

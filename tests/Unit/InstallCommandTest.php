@@ -119,6 +119,65 @@ class InstallCommandTest extends TestCase
         @unlink($path);
     }
 
+    public function test_it_patches_the_default_user_model_for_filament_access(): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'nova-admin-user-');
+        file_put_contents($path, <<<'PHP'
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class User extends Authenticatable
+{
+    use HasFactory, Notifiable;
+}
+PHP);
+
+        $command = new class($path) extends InstallCommand
+        {
+            public function __construct(private string $path)
+            {
+                parent::__construct();
+            }
+
+            public function ensureFilamentUserAccessForTest(): void
+            {
+                $this->ensureFilamentUserAccess();
+            }
+
+            protected function userModelClass(): string
+            {
+                return 'App\\Models\\User';
+            }
+
+            protected function userModelPath(): string
+            {
+                return $this->path;
+            }
+
+            public function info($string, $verbosity = null): void
+            {
+                //
+            }
+        };
+
+        $command->ensureFilamentUserAccessForTest();
+
+        $contents = file_get_contents($path);
+
+        $this->assertStringContainsString('use Filament\\Models\\Contracts\\FilamentUser;', $contents);
+        $this->assertStringContainsString('use Filament\\Panel;', $contents);
+        $this->assertStringContainsString('class User extends Authenticatable implements FilamentUser', $contents);
+        $this->assertStringContainsString('public function canAccessPanel(Panel $panel): bool', $contents);
+        $this->assertStringContainsString('return true;', $contents);
+
+        @unlink($path);
+    }
+
     public function test_it_passes_force_to_nova_admin_seeder(): void
     {
         $command = new class extends InstallCommand
