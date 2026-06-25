@@ -84,15 +84,23 @@ class NovaAdminSeeder extends Seeder
         }
     }
 
-    /** 读取包内合规模板并替换占位符；无模板时返回 null（页面留空待编辑）。 */
+    /**
+     * 读取合规模板并替换占位符；无模板时返回 null（页面留空待编辑）。
+     * 宿主项目 resources/defaults/static-pages/{slug}.html 优先，便于覆盖包内默认。
+     */
     protected function staticPageTemplate(string $slug, array $replacements): ?string
     {
-        $path = __DIR__.'/../../resources/defaults/static-pages/'.$slug.'.html';
+        $candidates = [
+            resource_path('defaults/static-pages/'.$slug.'.html'),
+            __DIR__.'/../../resources/defaults/static-pages/'.$slug.'.html',
+        ];
 
-        if (! is_file($path)) {
-            return null;
+        foreach ($candidates as $path) {
+            if (is_file($path)) {
+                return strtr((string) file_get_contents($path), $replacements);
+            }
         }
 
-        return strtr((string) file_get_contents($path), $replacements);
+        return null;
     }
 }
