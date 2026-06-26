@@ -1,6 +1,6 @@
 # nova-admin
 
-多站点复用的通用后台底座（**Laravel 12 + Filament 5**）：广告管理、站点设置、静态页面、ads.txt、robots.txt、后台中文、账号密码登录、默认管理员、后台 Logo 跳前台。
+多站点复用的通用后台底座（**Laravel 12 + Filament 5**）：广告管理、插屏与锚定代码生成、站点设置、静态页面、ads.txt、robots.txt、后台中文、账号密码登录、默认管理员、后台 Logo 跳前台。
 
 ---
 ## 一、新建项目从零接入
@@ -14,14 +14,10 @@ cd mysite
 composer require inova/nova-admin
 ```
 
-不指定版本号时，Composer 会安装 Packagist 上兼容当前项目的最新稳定版本。
-`nova-admin` 已依赖 Filament 5，不需要再单独执行
-`composer require filament/filament`。
+已依赖 Filament 5，无需单独安装。
 
-> Laravel 12 新项目默认使用 SQLite；改用 MySQL 等数据库时，先正确配置 `.env`。
-
-> **生产环境 `APP_URL` 必须为完整 URL**（如 `https://example.com`，含协议、不带路径或 `@`）。
-> robots.txt 的 `Sitemap` 行按 `APP_URL` 生成，写成 `example.com` 或 `domain@example.com` 等非法值会导致 Sitemap 地址错误。
+> 默认 SQLite；用 MySQL 等先配 `.env`。
+> 生产 `APP_URL` 须为完整 URL（如 `https://example.com`）——robots.txt 的 `Sitemap` 行按它生成。
 
 ### 2. 一键安装
 
@@ -29,17 +25,11 @@ composer require inova/nova-admin
 php artisan nova-admin:install
 ```
 
-该命令会自动创建并接入默认的 `admin` Panel、执行包内及项目待运行迁移、
-创建默认管理员、初始化 robots.txt 和站点设置、空广告表填充示例广告，发布 Filament / Livewire
-静态资源，并创建 storage 软链。默认使用包内配置；只有需要自定义时才发布
-`config/nova-admin.php`。
-无需单独安装 Filament Panel，也无需手动修改 `AdminPanelProvider.php`。
+一条命令搞定全部：接入 `admin` Panel、跑迁移、建默认管理员、初始化 robots/站点设置、
+填充示例广告、发布静态资源、建 storage 软链。无需手动碰 `AdminPanelProvider.php`。
 
-安装命令还会将后台生成的 `public/robots.txt`、`public/ads.txt` 和
-`public/vendor/livewire` 加入项目 `.gitignore`。项目已初始化 Git 时，会同时取消对 Laravel 默认
-`public/robots.txt` 的跟踪。
-
-生产兜底也在安装时处理：默认 `App\Models\User` 会自动接入 `FilamentUser`。
+附带处理：公开文件（`robots.txt`/`ads.txt`/`vendor/livewire`）加入 `.gitignore`，
+`App\Models\User` 自动接入 `FilamentUser`（防生产 403）。自定义才需发布 `config/nova-admin.php`。
 
 ### 3. 启动验证
 
@@ -47,10 +37,9 @@ php artisan nova-admin:install
 php artisan serve
 ```
 
-访问 `http://127.0.0.1:8000/admin` → 用 **nova / nova** 登录，即可看到：
-广告管理、站点设置、静态页面、Ads.txt、Robots.txt、系统日志六个后台入口。
+访问 `http://127.0.0.1:8000/admin` → 用 **nova / nova** 登录。
 
-> 上线前请立即在后台修改默认管理员密码。
+> 上线前立即在后台改默认密码。
 
 ---
 
@@ -58,7 +47,8 @@ php artisan serve
 
 | 能力 | 入口 |
 |------|------|
-| 广告管理（一位多条、按创建顺序输出、启用） | 后台「广告管理」 |
+| 广告管理（一位多条、按序输出、代码框语法高亮） | 后台「广告管理」 |
+| 插屏与锚定（生成 Google GPT 插屏/锚定代码，支持粘贴自动识别） | 后台「插屏与锚定」 |
 | 站点设置（基础/SEO/媒体/品牌） | 后台「站点设置」 |
 | 静态页面（关于/隐私/条款等富文本落地页，可增删改） | 后台「静态页面」 |
 | ads.txt 编辑 | 后台「Ads.txt」+ `GET /ads.txt` |
@@ -120,6 +110,11 @@ Route::get('/page/{slug}', function (string $slug) {
 
 > `content` 为富文本 HTML，输出用 `{!! !!}`（内容由后台管理员录入，可信）。
 
+### 插屏与锚定
+
+后台「插屏与锚定」按表单参数生成 Google GPT 插屏/锚定广告代码（支持粘贴现有代码自动识别填充）。
+生成后复制到「广告管理 → 全局 Head」的 Head 代码即可。仅生成代码，不含 GPT 库加载脚本。
+
 ### Sitemap
 
 包自带 `GET /sitemap.xml`（robots.txt 默认模板已指向它）。静态条目在 config
@@ -169,7 +164,7 @@ php artisan nova-admin:clear-sitemap-cache       # 清 sitemap 缓存
 'robots_txt'   => ['enabled' => true, 'sitemap_url' => null],
 'static_pages' => [
     'enabled' => true,
-    'presets' => [ /* slug => 标题，安装时预置；置 enabled=false 关闭整个功能 */ ],
+    'presets' => [ /* slug => [英文, 中文]，安装时预置；置 enabled=false 关闭整个功能 */ ],
 ],
 ```
 
