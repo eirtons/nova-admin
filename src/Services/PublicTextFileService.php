@@ -79,14 +79,6 @@ class PublicTextFileService
     {
         $path = $conf['path'];
 
-        // route_only：内容依赖运行时 {url}，不落静态文件（防 Nginx 绕过 PHP 返回冻结域名）。
-        // 顺手清掉历史遗留的静态文件，确保请求始终落到动态路由。
-        if (! empty($conf['route_only'])) {
-            File::delete($path);
-
-            return;
-        }
-
         if ($content === '') {
             if ($conf['empty_behavior'] === 'delete') {
                 File::delete($path);

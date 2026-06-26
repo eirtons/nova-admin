@@ -48,19 +48,19 @@ class PublicTextFileServiceTest extends TestCase
         $this->assertFileDoesNotExist(config('nova-admin.ads_txt.path'));
     }
 
-    public function test_route_only_robots_does_not_write_static_file_and_clears_stale_one(): void
+    public function test_robots_writes_static_file_with_resolved_sitemap_url(): void
     {
-        // 历史遗留的静态文件（如早期手写）
-        File::put(config('nova-admin.robots_txt.path'), 'stale content');
-
         $svc = app(PublicTextFileService::class);
         $svc->save('robots_txt', "User-agent: *\nSitemap: {url}/sitemap.xml");
 
-        // route_only：不落静态文件，旧文件被清掉，请求始终走路由
-        $this->assertFileDoesNotExist(config('nova-admin.robots_txt.path'));
+        // 落静态文件，{url} 按 APP_URL 解析写入
+        $path = config('nova-admin.robots_txt.path');
+        $this->assertFileExists($path);
 
-        // read() 走 DB 并动态替换 {url}（绝对 URL，按运行时域名）
-        $this->assertStringContainsString(rtrim(url('/'), '/').'/sitemap.xml', $svc->read('robots_txt'));
+        $expected = rtrim((string) config('app.url'), '/').'/sitemap.xml';
+        $this->assertStringContainsString($expected, File::get($path));
+        // DB 仍存占位符，read() 输出也含解析后的绝对 URL
+        $this->assertStringContainsString($expected, $svc->read('robots_txt'));
     }
 
     public function test_default_robots_blocks_admin_and_login_without_exposing_quick_login(): void
