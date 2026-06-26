@@ -68,6 +68,14 @@ class NovaAdminPlugin implements Plugin
 
         $panel->resources($resources)->pages($pages);
 
+        // 主色：config 给色板名，映射到 Filament\Support\Colors\Color 常量
+        if ($color = config('nova-admin.panel.primary_color')) {
+            $const = \Filament\Support\Colors\Color::class . '::' . ucfirst($color);
+            if (defined($const)) {
+                $panel->colors(['primary' => constant($const)]);
+            }
+        }
+
         // 布局：侧边栏收窄（默认 20rem 偏宽）；内容区宽度保持 Filament 默认，
         // 需要大空间的页面（如系统日志）自行覆盖 $maxContentWidth
         $panel->sidebarWidth(config('nova-admin.layout.sidebar_width', '16rem'));

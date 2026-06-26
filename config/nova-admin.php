@@ -10,6 +10,8 @@ return [
     */
     'panel' => [
         'id' => env('NOVA_ADMIN_PANEL_ID', 'admin'),
+        // 主色：Filament 内置色板名（amber/blue/indigo/emerald/slate/rose…）。null = 用 Filament 默认
+        'primary_color' => env('NOVA_ADMIN_PRIMARY_COLOR', 'indigo'),
     ],
 
     /*
