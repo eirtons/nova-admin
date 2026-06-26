@@ -56,6 +56,9 @@ class InstallCommand extends Command
             $this->info('广告数据已存在，跳过测试广告填充。');
         }
 
+        // 把默认时区落到宿主 config/app.php 与 .env，默认 Asia/Shanghai
+        $this->ensureTimezoneDefault();
+
         // 忽略后台生成的公开文本文件，并取消跟踪 Laravel 默认 robots.txt
         $this->ignoreGeneratedPublicFiles();
 
@@ -211,6 +214,76 @@ PHP;
     protected function makeNovaAdminSeeder(): NovaAdminSeeder
     {
         return new NovaAdminSeeder();
+    }
+
+    /**
+     * 默认时区落到宿主自有文件，宿主可见可改、复制 .env 部署即默认上海。
+     * - config/app.php：出厂硬编码 'UTC' 换成 env('APP_TIMEZONE', 'Asia/Shanghai')
+     * - .env / .env.example：缺 APP_TIMEZONE 行则补 Asia/Shanghai；已有则尊重不动
+     */
+    protected function ensureTimezoneDefault(): void
+    {
+        $this->patchAppTimezoneConfig();
+
+        foreach (['.env', '.env.example'] as $file) {
+            $this->ensureEnvTimezone(base_path($file));
+        }
+    }
+
+    protected function patchAppTimezoneConfig(): void
+    {
+        $path = config_path('app.php');
+        if (! File::exists($path)) {
+            return;
+        }
+
+        $contents = File::get($path);
+
+        // 出厂硬编码 'timezone' => 'UTC'，换成读 env、默认上海
+        $patched = preg_replace(
+            "/'timezone'\\s*=>\\s*'UTC'\\s*,/",
+            "'timezone' => env('APP_TIMEZONE', 'Asia/Shanghai'),",
+            $contents,
+            1,
+            $count,
+        );
+
+        if ($count > 0 && $patched !== null) {
+            File::put($path, $patched);
+            $this->info("已将 config/app.php 默认时区改为 env('APP_TIMEZONE', 'Asia/Shanghai')。");
+        }
+    }
+
+    protected function ensureEnvTimezone(string $path): void
+    {
+        if (! File::exists($path)) {
+            return;
+        }
+
+        $contents = File::get($path);
+
+        // 已有 APP_TIMEZONE（含注释掉的）则尊重宿主，不改
+        if (preg_match('/^\s*#?\s*APP_TIMEZONE\s*=/m', $contents)) {
+            return;
+        }
+
+        $line = 'APP_TIMEZONE=Asia/Shanghai';
+
+        // 插到 APP_FAKER_LOCALE 行后，和其他 APP_* 放一起；缺该行才追加到末尾
+        $patched = preg_replace(
+            '/^(APP_FAKER_LOCALE=.*)$/m',
+            '$1'.PHP_EOL.$line,
+            $contents,
+            1,
+            $count,
+        );
+
+        $contents = ($count > 0 && $patched !== null)
+            ? $patched
+            : rtrim($contents).PHP_EOL.$line.PHP_EOL;
+
+        File::put($path, $contents);
+        $this->info('已在 '.basename($path).' 写入 '.$line.'。');
     }
 
     protected function ignoreGeneratedPublicFiles(): void
