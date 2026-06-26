@@ -57,7 +57,8 @@ class PublicTextFileService
     public function save(string $type, ?string $content): array
     {
         $conf = $this->conf($type);
-        $content = trim((string) $content);
+        // 后台表单里 {url} 已被解析成站点 URL 展示；存库前收回成 {url}，避免域名焊死。
+        $content = $this->normalizePlaceholders(trim((string) $content));
 
         $this->config->set($conf['config_key'], $content, 'text', $type);
 
@@ -99,9 +100,21 @@ class PublicTextFileService
         File::put($path, $this->resolvePlaceholders($content).PHP_EOL);
     }
 
+    /** {url} → 站点 URL（config('app.url')，与请求域名无关，便于换域名/CLI 一致）。 */
     public function resolvePlaceholders(string $content): string
     {
-        return str_replace('{url}', rtrim(url('/'), '/'), $content);
+        return str_replace('{url}', $this->siteUrl(), $content);
+    }
+
+    /** 反向：把内容里等于站点 URL 的前缀收回成 {url}，确保 DB 永远存占位符不焊死域名。 */
+    public function normalizePlaceholders(string $content): string
+    {
+        return str_replace($this->siteUrl(), '{url}', $content);
+    }
+
+    protected function siteUrl(): string
+    {
+        return rtrim((string) config('app.url'), '/');
     }
 
     public function defaultTemplate(string $type): string

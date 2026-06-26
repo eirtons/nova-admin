@@ -20,6 +20,9 @@ composer require inova/nova-admin
 
 > Laravel 12 新项目默认使用 SQLite；改用 MySQL 等数据库时，先正确配置 `.env`。
 
+> **生产环境 `APP_URL` 必须为完整 URL**（如 `https://example.com`，含协议、不带路径或 `@`）。
+> robots.txt 的 `Sitemap` 行按 `APP_URL` 生成，写成 `example.com` 或 `domain@example.com` 等非法值会导致 Sitemap 地址错误。
+
 ### 2. 一键安装
 
 ```bash
