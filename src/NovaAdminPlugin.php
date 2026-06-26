@@ -7,6 +7,7 @@ use Filament\Panel;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Support\HtmlString;
+use Inova\NovaAdmin\Filament\Pages\AdCodeGeneratorPage;
 use Inova\NovaAdmin\Filament\Pages\AdsTxtPage;
 use Inova\NovaAdmin\Filament\Pages\Auth\Login;
 use Inova\NovaAdmin\Filament\Pages\RobotsTxtPage;
@@ -50,7 +51,7 @@ class NovaAdminPlugin implements Plugin
     {
         $resources = [AdSpotResource::class];
 
-        $pages = [SiteSettingsPage::class];
+        $pages = [SiteSettingsPage::class, AdCodeGeneratorPage::class];
 
         if (config('nova-admin.static_pages.enabled', true)) {
             $pages[] = StaticPagesPage::class;
