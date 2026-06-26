@@ -1,5 +1,32 @@
 {{-- 包视图不在宿主项目 Tailwind 扫描范围内，样式用内联保证生效 --}}
 <x-filament-panels::page>
+    {{-- 快速识别：粘贴现有 GPT 广告代码，自动解析参数填充下方表单（默认折叠） --}}
+    <x-filament::section collapsible collapsed>
+        <x-slot name="heading">快速识别</x-slot>
+        <x-slot name="description">粘贴现有的 Google Ad Manager 广告代码，自动识别并填充下方表单</x-slot>
+
+        <div x-data="novaAdIdentify()">
+            <textarea
+                x-ref="paste"
+                x-model="pasted"
+                rows="5"
+                placeholder="在此粘贴广告代码（含 googletag.defineSlot / defineOutOfPageSlot 的脚本）…"
+                style="width: 100%; padding: 0.75rem; border: 1px solid rgb(209 213 219); border-radius: 0.5rem; background: #0d1117; color: #e6edf3; font: 0.8rem/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; resize: vertical;"
+            ></textarea>
+
+            <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; align-items: center;">
+                <x-filament::button size="sm" icon="heroicon-m-sparkles" x-on:click="identify()">
+                    自动识别
+                </x-filament::button>
+                <x-filament::button size="sm" color="gray" x-on:click="pasted = ''; message = null">
+                    清空
+                </x-filament::button>
+                <span x-show="message" x-text="message" x-cloak
+                      :style="ok ? 'color:#16a34a;font-size:0.8rem' : 'color:#d97706;font-size:0.8rem'"></span>
+            </div>
+        </div>
+    </x-filament::section>
+
     <form wire:submit="generate">
         {{ $this->form }}
 
