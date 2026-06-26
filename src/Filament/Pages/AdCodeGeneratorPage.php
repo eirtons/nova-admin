@@ -48,8 +48,8 @@ class AdCodeGeneratorPage extends Page implements HasSchemas
                 Radio::make('adType')
                     ->label('广告类型')
                     ->options([
-                        'both'         => '插屏 + 锚定（组合模式）',
-                        'interstitial' => '仅插屏广告（单一模式）',
+                        'both'         => '插屏 + 锚定',
+                        'interstitial' => '仅插屏广告',
                     ])
                     ->default('interstitial')
                     ->required()
