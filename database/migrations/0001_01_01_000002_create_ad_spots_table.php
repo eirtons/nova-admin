@@ -10,13 +10,11 @@ return new class extends Migration
     {
         Schema::create('ad_spots', function (Blueprint $table) {
             $table->id();
-            $table->string('position');        // 广告位 key（枚举，非唯一）
+            $table->string('position')->unique();   // 广告位 key（枚举，每个位置唯一）
             $table->longText('head_code')->nullable();
             $table->longText('body_code')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-
-            $table->index(['position', 'is_active']);
         });
     }
 

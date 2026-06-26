@@ -22,13 +22,9 @@ class AdService
             return '';
         }
 
-        return AdSpot::query()
+        return (string) AdSpot::query()
             ->where('position', $position)
             ->where('is_active', true)
-            ->orderBy('id')
-            ->pluck($column)
-            ->map(fn ($code): string => (string) $code)
-            ->filter(fn (string $code): bool => trim($code) !== '')
-            ->implode("\n");
+            ->value($column);
     }
 }

@@ -49,9 +49,11 @@ class AdSpotResource extends Resource
                 ->label('广告位')
                 ->options(config('nova-admin.ad_positions', []))
                 ->required()
+                ->unique(ignoreRecord: true, table: 'ad_spots')
+                ->validationMessages(['unique' => '该广告位已存在，每个位置只能配置一条'])
                 // 非原生下拉：必填校验走 Filament 红色错误提示，浏览器原生气泡不明显
                 ->native(false)
-                ->helperText('同一广告位可创建多条，启用的按顺序输出'),
+                ->helperText('每个广告位只能配置一条'),
             Textarea::make('head_code')
                 ->label('Head 代码')
                 ->view('nova-admin::filament.components.code-editor-dark')
