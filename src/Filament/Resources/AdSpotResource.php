@@ -54,15 +54,13 @@ class AdSpotResource extends Resource
                 ->helperText('同一广告位可创建多条，启用的按顺序输出'),
             Textarea::make('head_code')
                 ->label('Head 代码')
-                ->rows(4)
+                ->view('nova-admin::filament.components.code-editor-dark')
                 ->columnSpanFull()
-                ->placeholder('<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxxxxxxxxxxxxxx" crossorigin="anonymous"></script>')
                 ->helperText('注入到页面 <head> 的代码，如 AdSense 全局脚本、验证标签'),
             Textarea::make('body_code')
                 ->label('Body 代码')
-                ->rows(6)
+                ->view('nova-admin::filament.components.code-editor-dark')
                 ->columnSpanFull()
-                ->placeholder('<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-xxxxxxxxxxxxxxxx" data-ad-slot="0000000000"></ins>')
                 ->helperText('展示在页面广告位处的广告单元代码'),
             Toggle::make('is_active')
                 ->label('启用')
@@ -102,9 +100,7 @@ class AdSpotResource extends Resource
                             ->schema([
                                 TextEntry::make('head_code')
                                     ->label('')
-                                    ->fontFamily('mono')
-                                    ->formatStateUsing(fn (?string $state): string => blank($state) ? '（未配置）' : $state)
-                                    ->extraAttributes(['class' => 'whitespace-pre-wrap break-all text-xs']),
+                                    ->view('nova-admin::filament.components.code-block'),
                             ])
                             ->collapsible(),
                         Section::make('Body 代码')
@@ -112,9 +108,7 @@ class AdSpotResource extends Resource
                             ->schema([
                                 TextEntry::make('body_code')
                                     ->label('')
-                                    ->fontFamily('mono')
-                                    ->formatStateUsing(fn (?string $state): string => blank($state) ? '（未配置）' : $state)
-                                    ->extraAttributes(['class' => 'whitespace-pre-wrap break-all text-xs']),
+                                    ->view('nova-admin::filament.components.code-block'),
                             ])
                             ->collapsible(),
                     ])),

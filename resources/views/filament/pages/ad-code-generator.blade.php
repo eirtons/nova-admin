@@ -15,7 +15,7 @@
             <x-slot name="heading">生成结果</x-slot>
             <x-slot name="description">将以下完整代码放置于网站全局 &lt;head&gt; 标签内（广告管理 → 全局 Head 的 Head 代码）</x-slot>
 
-            <div x-data="{ copied: false }" style="position: relative;">
+            <div x-data="{ copied: false }" x-init="$nextTick(() => window.novaHighlight && window.novaHighlight())" wire:key="generated-{{ md5($generated) }}" style="position: relative;">
                 <x-filament::button
                     size="sm"
                     icon="heroicon-m-clipboard-document"
@@ -26,7 +26,7 @@
                     <span x-show="copied" x-cloak>已复制</span>
                 </x-filament::button>
 
-                <pre x-ref="code" style="margin: 0; padding: 1rem; background: #0d0f12; border-radius: 0.5rem; color: #d4d4d8; font-size: 0.75rem; line-height: 1.6; max-height: 60vh; overflow: auto; white-space: pre-wrap; word-break: break-all;">{{ $generated }}</pre>
+                <pre style="margin: 0; padding: 1rem; background: #0d0f12; border-radius: 0.5rem; font-size: 0.75rem; line-height: 1.6; max-height: 60vh; overflow: auto;"><code x-ref="code" class="nova-hl language-xml" style="background: transparent; white-space: pre-wrap; word-break: break-all;">{{ $generated }}</code></pre>
             </div>
         </x-filament::section>
     @endif
