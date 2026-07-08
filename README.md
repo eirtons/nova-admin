@@ -84,31 +84,61 @@ SiteConfig::set('ads_enabled', true, 'boolean'); // 按 type 存取
 ### 静态页面
 
 后台「静态页面」管理关于、隐私政策、服务条款等富文本落地页。安装时按
-`nova-admin.static_pages.presets` 预置一批页面，后台可继续增删改。
+`nova-admin.static_pages.presets` 预置一批页面（含 AdSense 法务五件套 + Cookie Policy），
+`static_pages` 表是**唯一数据源**——不要在项目里另建 pages 表镜像它，两套数据必然漂移。
 
-前台按 slug 读取（仅返回**已启用**页面，未找到或已停用返回 `null`）：
+**约定：正文首个 `<h1>` 即页面标题**（保存时自动提取为 `title` 并在 `body_html` 中剥离），
+Meta Description 留空时自动取正文摘要。前台模板契约三件套：
+
+| 属性 | 说明 |
+|------|------|
+| `$page->title` | 页面标题（编辑器里的 H1） |
+| `$page->body_html` | 正文 HTML（已剥掉标题 H1，模板自行渲染 `<h1>`） |
+| `$page->meta_description` | SEO 摘要 |
+
+#### 前台路由：包内自带，新项目零代码
+
+`nova-admin:install` 会在 `.env` 写入 `NOVA_STATIC_FRONTEND=true`，包随即注册
+`GET /{slug}`（仅限 presets 内的 slug，不劫持其他 URL），路由名 `pages.show`，
+默认用包内简洁模板渲染，激活页面自动进 sitemap。**后台保存，前台立即生效。**
+
+有自己视觉的项目只换视图，路由和数据流不动：
+
+```php
+// config/nova-admin.php
+'static_pages' => [
+    'frontend' => [
+        'enabled'    => env('NOVA_STATIC_FRONTEND', false),
+        'view'       => 'pages.show',   // 换成你的 Blade，收 $page 变量
+        'route_name' => 'pages.show',
+    ],
+],
+```
+
+多主题项目视图名需动态解析（如 `theme_view('page')`）时，关闭包路由自己写，
+但**数据仍读 `static_page()`，不要建自己的表**：
+
+```php
+// routes/web.php（NOVA_STATIC_FRONTEND 保持 false）
+Route::get('/{slug}', function (string $slug) {
+    abort_unless($page = static_page($slug), 404);
+
+    return view(theme_view('page'), compact('page'));
+})->whereIn('slug', array_keys(config('nova-admin.static_pages.presets')))->name('pages.show');
+```
+
+零散场景仍可用 helper 按 slug 读取（仅返回**已启用**页面，未找到或停用返回 `null`）：
 
 ```blade
 @php($page = static_page('privacy-policy'))
 
 @if ($page)
     <h1>{{ $page->title }}</h1>
-    <div class="prose">{!! $page->content !!}</div>
+    <div class="prose">{!! $page->body_html !!}</div>
 @endif
 ```
 
-对应路由可在项目自行定义，例如：
-
-```php
-// routes/web.php
-Route::get('/page/{slug}', function (string $slug) {
-    abort_unless($page = static_page($slug), 404);
-
-    return view('pages.show', compact('page'));
-})->name('static-page');
-```
-
-> `content` 为富文本 HTML，输出用 `{!! !!}`（内容由后台管理员录入，可信）。
+> `body_html` 为富文本 HTML，输出用 `{!! !!}`（内容由后台管理员录入，可信）。
 
 ### 插屏与锚定
 

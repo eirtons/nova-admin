@@ -109,6 +109,8 @@ class NovaAdminServiceProvider extends ServiceProvider
 
     protected function registerRoutes(): void
     {
+        $this->registerStaticPageFrontend();
+
         if (config('nova-admin.ads_txt.enabled', true)) {
             Route::get('/ads.txt', function (PublicTextFileService $svc) {
                 return response($svc->read('ads_txt'), 200)
@@ -140,6 +142,45 @@ class NovaAdminServiceProvider extends ServiceProvider
 
             return redirect(config('nova-admin.quick_login.redirect', '/admin'));
         })->middleware('web')->name('nova-admin.quick-login'); // 需 web 中间件组提供 session，否则登录态无法持久化
+    }
+
+    /**
+     * 前台静态页：static_pages 表为唯一数据源，后台保存前台即生效。
+     * 仅注册 presets 内的 slug，不劫持其他 URL；老项目无 NOVA_STATIC_FRONTEND 时完全不注册。
+     */
+    protected function registerStaticPageFrontend(): void
+    {
+        if (! config('nova-admin.static_pages.frontend.enabled')) {
+            return;
+        }
+
+        $slugs = array_keys((array) config('nova-admin.static_pages.presets', []));
+
+        if ($slugs === []) {
+            return;
+        }
+
+        Route::middleware('web')
+            ->get('/{staticPageSlug}', function (string $staticPageSlug) {
+                $page = static_page($staticPageSlug);
+                abort_if($page === null, 404);
+
+                return view(
+                    config('nova-admin.static_pages.frontend.view', 'nova-admin::static-page'),
+                    ['page' => $page],
+                );
+            })
+            ->whereIn('staticPageSlug', $slugs)
+            ->name(config('nova-admin.static_pages.frontend.route_name', 'pages.show'));
+
+        // 激活的静态页自动进 sitemap
+        $this->app->make(SitemapService::class)->register(
+            fn () => \Inova\NovaAdmin\Models\StaticPage::query()
+                ->where('is_active', true)
+                ->whereIn('slug', $slugs)
+                ->get()
+                ->map(fn ($page) => ['loc' => '/'.$page->slug, 'lastmod' => $page->updated_at]),
+        );
     }
 
     protected function registerPublishing(): void

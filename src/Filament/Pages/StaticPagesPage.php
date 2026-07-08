@@ -5,6 +5,7 @@ namespace Inova\NovaAdmin\Filament\Pages;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Tabs;
@@ -51,7 +52,10 @@ class StaticPagesPage extends Page implements HasSchemas
 
         $this->form->fill(
             collect($this->presets())
-                ->mapWithKeys(fn (array $p, string $slug) => [$slug => $pages[$slug]?->content ?? ''])
+                ->mapWithKeys(fn (array $p, string $slug) => [$slug => [
+                    'content' => $pages[$slug]?->content ?? '',
+                    'meta_description' => $pages[$slug]?->meta_description ?? '',
+                ]])
                 ->all()
         );
     }
@@ -64,10 +68,15 @@ class StaticPagesPage extends Page implements HasSchemas
                 Text::make($p[1])->color('gray')->size(TextSize::Small),
                 // statePath 为页面 data 数组，不挂在 StaticPage 模型上，须显式指定
                 // public 磁盘，与模型 setUpRichContent() 一致，保证前台 /storage 取得到附件
-                RichEditor::make($slug)
+                RichEditor::make($slug.'.content')
                     ->hiddenLabel()
                     ->fileAttachmentsDisk('public')
                     ->extraInputAttributes(['style' => 'min-height: 24rem'])
+                    ->columnSpanFull(),
+                TextInput::make($slug.'.meta_description')
+                    ->label('Meta Description')
+                    ->helperText('搜索结果摘要（约 155 字符）；留空则自动取正文开头生成')
+                    ->maxLength(255)
                     ->columnSpanFull(),
             ]))
             ->values()
@@ -90,9 +99,14 @@ class StaticPagesPage extends Page implements HasSchemas
         $data = $this->form->getState();
 
         foreach ($this->presets() as $slug => $p) {
+            // title 先落预设名兜底，模型 saving 钩子会用正文首个 H1 覆盖（编辑器所见即所得）
             StaticPage::updateOrCreate(
                 ['slug' => $slug],
-                ['content' => $data[$slug] ?? '', 'title' => $p[0]],
+                [
+                    'content' => $data[$slug]['content'] ?? '',
+                    'meta_description' => $data[$slug]['meta_description'] ?? null,
+                    'title' => $p[0],
+                ],
             );
         }
 

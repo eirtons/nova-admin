@@ -113,6 +113,13 @@ return [
     | 模板查找顺序：宿主 resources/defaults/static-pages/ 优先，回退包内默认，
     | 故个别站点可放同名 .html 覆盖默认文案，无需改包。
     | site_description 为站点业务一句话描述，由各站点在此填写。
+    |
+    | frontend：包直接注册前台路由 GET /{slug}（仅限 presets 里的 slug），
+    | static_pages 表即唯一数据源，后台保存前台立即生效，无需项目自建 pages 表。
+    | nova-admin:install 会在新项目 .env 写入 NOVA_STATIC_FRONTEND=true 自动启用；
+    | 已有自建静态页路由的老项目不受影响（无该 env 时默认关闭）。
+    | view 可换成项目自己的 Blade（多主题项目指向主题 page 模板），
+    | 模板契约：$page->title / $page->body_html（已剥标题 H1）/ $page->meta_description。
     */
     'static_pages' => [
         'enabled' => true,
@@ -125,6 +132,12 @@ return [
             'disclaimer'       => ['Disclaimer', '免责声明'],
             'faq'              => ['FAQ', '常见问题'],
             'dmca'             => ['DMCA', 'DMCA 版权'],
+            'cookie-policy'    => ['Cookie Policy', 'Cookie 政策'],
+        ],
+        'frontend' => [
+            'enabled'    => env('NOVA_STATIC_FRONTEND', false),
+            'view'       => 'nova-admin::static-page',
+            'route_name' => 'pages.show',
         ],
     ],
 

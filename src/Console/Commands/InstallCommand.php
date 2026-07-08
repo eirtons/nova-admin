@@ -59,6 +59,9 @@ class InstallCommand extends Command
         // 把默认时区落到宿主 config/app.php 与 .env，默认 Asia/Shanghai
         $this->ensureTimezoneDefault();
 
+        // 新项目默认启用包内前台静态页路由（static_pages 表即唯一数据源）
+        $this->ensureStaticFrontendEnabled();
+
         // 忽略后台生成的公开文本文件，并取消跟踪 Laravel 默认 robots.txt
         $this->ignoreGeneratedPublicFiles();
 
@@ -284,6 +287,30 @@ PHP;
 
         File::put($path, $contents);
         $this->info('已在 '.basename($path).' 写入 '.$line.'。');
+    }
+
+    /**
+     * .env / .env.example 写入 NOVA_STATIC_FRONTEND=true：新项目开箱即得前台静态页。
+     * 已有该行（含注释掉的）则尊重宿主不动——自建静态页路由的老项目手动保持 false。
+     */
+    protected function ensureStaticFrontendEnabled(): void
+    {
+        foreach (['.env', '.env.example'] as $file) {
+            $path = base_path($file);
+
+            if (! File::exists($path)) {
+                continue;
+            }
+
+            $contents = File::get($path);
+
+            if (preg_match('/^\s*#?\s*NOVA_STATIC_FRONTEND\s*=/m', $contents)) {
+                continue;
+            }
+
+            File::put($path, rtrim($contents).PHP_EOL.'NOVA_STATIC_FRONTEND=true'.PHP_EOL);
+            $this->info('已在 '.$file.' 写入 NOVA_STATIC_FRONTEND=true。');
+        }
     }
 
     protected function ignoreGeneratedPublicFiles(): void
