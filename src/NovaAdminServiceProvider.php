@@ -2,6 +2,7 @@
 
 namespace Inova\NovaAdmin;
 
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
@@ -58,6 +59,8 @@ class NovaAdminServiceProvider extends ServiceProvider
             'ad-head' => AdHead::class,
         ]);
 
+        $this->trustProxies();
+
         $this->registerRoutes();
         $this->registerPublishing();
 
@@ -71,6 +74,18 @@ class NovaAdminServiceProvider extends ServiceProvider
 
             $this->ensureLivewireAssetsPublished();
         }
+    }
+
+    /**
+     * 反代（Nginx/CDN）后端跑 HTTP 时，Laravel 看到的 scheme 是 http，
+     * 生成的 Livewire update 端点就是 http://，被浏览器按 Mixed Content 拦掉。
+     * 等价于宿主 bootstrap/app.php 里的 $middleware->trustProxies(at: '*')，
+     * 收进包里，宿主不必每个项目再配一遍。
+     * 信任全部代理；只需信任固定 IP 段时由宿主自行覆盖。
+     */
+    protected function trustProxies(): void
+    {
+        TrustProxies::at('*');
     }
 
     protected function ensureLivewireAssetsPublished(): void
