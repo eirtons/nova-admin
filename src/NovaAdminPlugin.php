@@ -7,7 +7,6 @@ use Filament\Panel;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Support\HtmlString;
-use Inova\NovaAdmin\Filament\Pages\AdCodeGeneratorPage;
 use Inova\NovaAdmin\Filament\Pages\AdsTxtPage;
 use Inova\NovaAdmin\Filament\Pages\Auth\Login;
 use Inova\NovaAdmin\Filament\Pages\RobotsTxtPage;
@@ -51,7 +50,7 @@ class NovaAdminPlugin implements Plugin
     {
         $resources = [AdSpotResource::class];
 
-        $pages = [SiteSettingsPage::class, AdCodeGeneratorPage::class];
+        $pages = [SiteSettingsPage::class];
 
         if (config('nova-admin.static_pages.enabled', true)) {
             $pages[] = StaticPagesPage::class;
@@ -99,7 +98,6 @@ class NovaAdminPlugin implements Plugin
         $this->registerLogoLink();
         $this->registerCodeHighlight();
         $this->registerCodeEditor();
-        $this->registerAdIdentify();
     }
 
     /**
@@ -190,105 +188,6 @@ class NovaAdminPlugin implements Plugin
                             onScroll() {
                                 this.$refs.highlight.scrollTop = this.$refs.input.scrollTop;
                                 this.$refs.highlight.scrollLeft = this.$refs.input.scrollLeft;
-                            },
-                        }));
-                    }
-                    if (window.Alpine) build();
-                    else document.addEventListener('alpine:init', build);
-                })();
-                </script>
-                HTML)
-        );
-    }
-
-    /**
-     * 快速识别：解析粘贴的 GPT 广告代码，自动填充「插屏与锚定」表单。
-     * 移植自 novatool 的 autoIdentify（纯正则解析），结果经 Livewire $wire.set 填入表单。
-     */
-    protected function registerAdIdentify(): void
-    {
-        FilamentView::registerRenderHook(
-            PanelsRenderHook::HEAD_END,
-            fn (): HtmlString => new HtmlString(<<<'HTML'
-                <script>
-                (function () {
-                    function build() {
-                        if (! window.Alpine) return;
-                        window.Alpine.data('novaAdIdentify', () => ({
-                            pasted: '',
-                            message: null,
-                            ok: false,
-                            identify() {
-                                const code = (this.pasted || '').trim();
-                                if (! code) { this.ok = false; this.message = '请先粘贴广告代码'; return; }
-
-                                const filled = [];
-                                // 插屏：defineOutOfPageSlot('path')
-                                const oop = [...code.matchAll(/defineOutOfPageSlot\s*\(\s*["']([^"']+)["']/g)].map(m => m[1]);
-
-                                // defineSlot('path', sizes, 'divId') —— 括号计数法提完整 sizes（支持嵌套数组、"fluid"）
-                                const slots = [];
-                                const slotRe = /defineSlot\s*\(\s*["']([^"']+)["']\s*,\s*/g;
-                                let sm;
-                                while ((sm = slotRe.exec(code)) !== null) {
-                                    const path = sm[1];
-                                    const rest = code.slice(sm.index + sm[0].length);
-                                    if (rest[0] !== '[') continue;
-                                    let depth = 0, i = 0;
-                                    for (; i < rest.length; i++) {
-                                        if (rest[i] === '[') depth++;
-                                        else if (rest[i] === ']') { depth--; if (depth === 0) { i++; break; } }
-                                    }
-                                    const sizes = rest.slice(0, i);
-                                    const after = rest.slice(i);
-                                    const div = after.match(/^\s*,\s*["']([^"']+)["']/);
-                                    if (! div) continue;
-                                    slots.push({ path, sizes, divId: div[1] });
-                                }
-
-                                const interstitialSlots = [
-                                    ...oop.map(p => ({ path: p })),
-                                    ...slots.filter(s => /interstitial/i.test(s.path)),
-                                ];
-                                let anchor = slots.find(s => /anchor/i.test(s.path) && !/interstitial/i.test(s.path));
-                                // 无 anchor 命名时，按 position:fixed 结构兜底
-                                if (! anchor) {
-                                    const fixedDiv = code.match(/id\s*=\s*['"]([^'"]+)['"][^>]*style\s*=\s*['"][^'"]*position\s*:\s*fixed/i)
-                                        || code.match(/style\s*=\s*['"][^'"]*position\s*:\s*fixed[^'"]*['"][^>]*id\s*=\s*['"]([^'"]+)['"]/i);
-                                    if (fixedDiv) anchor = slots.find(s => s.divId === fixedDiv[1]);
-                                    if (! anchor && /position\s*:\s*fixed/i.test(code)) {
-                                        anchor = slots.find(s => !/interstitial/i.test(s.path));
-                                    }
-                                }
-
-                                let interstitialId = interstitialSlots[0] ? interstitialSlots[0].path : null;
-                                if (! interstitialId) {
-                                    const raw = [...code.matchAll(/["'](\/\d+\/[^"'\s<>]+)["']/g)].map(x => x[1]);
-                                    interstitialId = raw.find(p => /interstitial/i.test(p)) || null;
-                                }
-
-                                const w = this.$wire;
-                                if (interstitialId) { w.set('data.interstitialAdUnitId', interstitialId); filled.push('插屏路径'); }
-                                if (anchor) {
-                                    w.set('data.anchorAdUnitId', anchor.path); filled.push('锚定路径');
-                                    if (anchor.sizes) { w.set('data.anchorSizes', anchor.sizes); filled.push('尺寸'); }
-                                    if (anchor.divId) { w.set('data.anchorDivId', anchor.divId); filled.push('容器ID'); }
-                                    let pos = null;
-                                    if (anchor.divId) {
-                                        const ctx = new RegExp(`id\\s*=\\s*['"]${anchor.divId.replace(/-/g,'\\-')}['"][^]*?(?:bottom|top)\\s*:\\s*0`, 'i').exec(code);
-                                        if (ctx) pos = /bottom\s*:\s*0/i.test(ctx[0]) ? 'bottom' : 'top';
-                                    }
-                                    if (! pos) pos = /top\s*:\s*0/i.test(code) && !/bottom\s*:\s*0/i.test(code) ? 'top' : 'bottom';
-                                    w.set('data.anchorPosition', pos); filled.push('位置');
-                                }
-
-                                // 据识别结果定 adType（放最后，触发表单 live 重渲染显隐锚定字段）
-                                const type = (interstitialId && anchor) ? 'both' : (interstitialId ? 'interstitial' : null);
-                                if (type) w.set('data.adType', type);
-
-                                if (filled.length === 0) { this.ok = false; this.message = '未识别出有效信息，请检查代码格式'; return; }
-                                this.ok = true;
-                                this.message = `已识别为${type === 'both' ? '插屏 + 锚定' : '插屏'}，填充：${filled.join('、')}`;
                             },
                         }));
                     }
