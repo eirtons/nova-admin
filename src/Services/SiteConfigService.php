@@ -3,12 +3,18 @@
 namespace Inova\NovaAdmin\Services;
 
 use Inova\NovaAdmin\Models\SiteConfig;
+use Illuminate\Database\QueryException;
 
 class SiteConfigService
 {
     public function get(string $key, mixed $default = null): mixed
     {
-        $row = SiteConfig::query()->where('key', $key)->first();
+        try {
+            $row = SiteConfig::query()->where('key', $key)->first();
+        } catch (QueryException) {
+            // Frontend helpers may run before the package migrations on first deploy.
+            return $default;
+        }
 
         if ($row === null) {
             return $default;
