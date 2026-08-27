@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Inova\NovaAdmin\Console\Commands\ClearCacheCommand;
 use Inova\NovaAdmin\Console\Commands\CreateAdminCommand;
+use Inova\NovaAdmin\Console\Commands\ImportSiteAdConfigCommand;
 use Inova\NovaAdmin\Console\Commands\InstallCommand;
 use Inova\NovaAdmin\Console\Commands\SeedAdSpotsCommand;
 use Inova\NovaAdmin\Services\AdService;
@@ -68,6 +69,7 @@ class NovaAdminServiceProvider extends ServiceProvider
                 InstallCommand::class,
                 CreateAdminCommand::class,
                 SeedAdSpotsCommand::class,
+                ImportSiteAdConfigCommand::class,
                 ClearCacheCommand::class,
             ]);
 

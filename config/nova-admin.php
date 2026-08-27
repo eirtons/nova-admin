@@ -40,6 +40,34 @@ return [
         'home_banner2'   => '首页 Banner 2',
         'detail_banner1' => '详情页 Banner 1',
         'detail_banner2' => '详情页 Banner 2',
+        'anchor'         => 'Anchor（锚定）',
+        'interstitial'   => 'Interstitial（插屏）',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | 站点广告配置下发协议（webdeploy）
+    |--------------------------------------------------------------------------
+    | `php artisan ads:import-site-ad-config <file>` 读取 webdeploy 下发的 JSON，
+    | 把 GAM 广告位代码写入 ad_spots、ads.txt 走 PublicTextFileService。
+    |
+    | position_map：协议键 → 本包 ad_positions 的 position。协议键带下划线分隔
+    | （home_banner_1），本包 position 不带（home_banner1），必须显式映射。
+    | 未在此列出的协议键一律判为未知键并整体失败；映射目标也必须在 ad_positions 里，
+    | 否则写进去 AdService 也不会输出。站点若只用部分广告位，删掉对应行即可。
+    */
+    'ads_protocol' => [
+        'version'         => 1,
+        'global_head_key' => 'global_head',
+        'position_map'    => [
+            'global_head'      => 'global_head',
+            'home_banner_1'    => 'home_banner1',
+            'home_banner_2'    => 'home_banner2',
+            'detail_banner_1'  => 'detail_banner1',
+            'detail_banner_2'  => 'detail_banner2',
+            'anchor'           => 'anchor',
+            'interstitial'     => 'interstitial',
+        ],
     ],
 
     /*

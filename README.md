@@ -51,6 +51,7 @@ php artisan serve
 | 站点设置（基础/SEO/媒体/品牌） | 后台「站点设置」 |
 | 静态页面（关于/隐私/条款等富文本落地页，可增删改） | 后台「静态页面」 |
 | ads.txt 编辑 | 后台「Ads.txt」+ `GET /ads.txt` |
+| 站点广告配置下发（webdeploy 协议） | `php artisan ads:import-site-ad-config <file>` |
 | robots.txt 编辑（含默认模板） | 后台「Robots.txt」+ `GET /robots.txt` |
 | sitemap.xml（静态条目 + 项目注册动态来源，带缓存） | `GET /sitemap.xml` |
 | 系统日志（查看尾部 / 下载 / 删除，兼容单文件与按天分割） | 后台「系统日志」 |
@@ -167,6 +168,44 @@ php artisan nova-admin:install                  # 接入 Panel、建表并初始
 php artisan nova-admin:create-admin [--force]   # 创建/重置默认管理员
 php artisan ad:seed [--off]                     # 填充测试广告（先清空）/ 禁用广告
 php artisan nova-admin:clear-sitemap-cache       # 清 sitemap 缓存
+php artisan ads:import-site-ad-config <file>    # 导入 webdeploy 下发的站点广告配置
+```
+
+### 站点广告配置下发协议（webdeploy）
+
+webdeploy 把 GAM 广告位代码与 ads.txt 打成一个 JSON 下发到站点，本命令负责落库：
+
+```json
+{
+  "meta": { "protocol": 1 },
+  "slots": {
+    "global_head":   { "name": "Global", "head_code": "<script>…loader + enableServices…</script>" },
+    "home_banner_1": { "name": "Home 1", "head_code": "…", "body_code": "…" }
+  },
+  "ads_txt": "google.com, pub-…, DIRECT, f08c47fec0942fa0"
+}
+```
+
+- `slots` → `ad_spots`（按 `position` 覆盖式写入并置为启用），`ads_txt` → 与后台「Ads.txt」页同一条存储路径（DB + `public/ads.txt`）。
+- **两个部件各自独立成败**：未下发的部件不出现在回包里；下发了却写不进去的部件必须回 `failed`，不会静默略过。
+- `slots` 内部是一个事务：任一广告位结构非法、协议键未知、或映射目标未在 `ad_positions` 启用，整批回滚。
+- `slots` 必须包含 `global_head`（承载 loader 与 `enableServices`）。
+- 结果通过 stdout 的 marker 回传，这是 webdeploy 唯一认可的边界：
+
+```
+__SITE_AD_CONFIG_RESULT_BEGIN__{"slots":{"status":"success","written_positions":[…]},"ads_txt":{"status":"success"}}__SITE_AD_CONFIG_RESULT_END__
+```
+
+任一部件 `failed` 时命令退出码为 1。协议键与本包 `position` 的对应关系在
+`config('nova-admin.ads_protocol.position_map')`：协议键带下划线（`home_banner_1`），
+本包 position 不带（`home_banner1`），站点只用部分广告位时删掉对应行即可。
+
+前台模板注意 GPT 的顺序要求——slot 定义必须早于 `enableServices`，即 `global_head` 放最后：
+
+```blade
+<x-ad-head position="anchor" />
+<x-ad-head position="interstitial" />
+<x-ad-head position="global_head" />
 ```
 
 ---
@@ -178,6 +217,7 @@ php artisan nova-admin:clear-sitemap-cache       # 清 sitemap 缓存
 ```php
 'panel'        => ['id' => 'admin'],
 'ad_positions' => [ /* 自定义广告位枚举 */ ],
+'ads_protocol' => ['version' => 1, 'position_map' => [ /* 协议键 => position */ ]],
 'navigation'   => [
     'groups' => ['settings' => '基础设置', 'content' => '内容管理', 'system' => '系统'],
     'sort' => 90,
