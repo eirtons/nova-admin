@@ -225,6 +225,10 @@ __SITE_AD_CONFIG_RESULT_BEGIN__{"slots":{"status":"success","written_positions":
 'admin'        => ['default_name' => 'nova', 'login_field' => 'name'],
 'admin_brand'  => ['logo_link_to_front' => true, 'front_url' => '/', 'new_tab' => true],
 'ads_txt'      => ['enabled' => true, 'empty_behavior' => 'delete'],
+'site_settings' => [   // 站点设置页的上传限制，max_size 单位 KB，0 = 不限
+    'favicon' => ['accepted_types' => ['image/x-icon', 'image/png'], 'max_size' => 1024],
+    'logo'    => ['max_size' => 2048],
+],
 'robots_txt'   => ['enabled' => true, 'sitemap_url' => null],
 'static_pages' => [
     'enabled' => true,

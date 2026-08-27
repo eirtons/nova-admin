@@ -86,17 +86,61 @@ class SiteSettingsPage extends Page implements HasSchemas
 
             $components[] = match (true) {
                 $key === 'favicon_path'     => $this->fileUpload($key, $label)
-                    ->helperText('支持 .ico / .png / .svg，为空则使用浏览器默认图标')
-                    ->acceptedFileTypes(['image/x-icon', 'image/png', 'image/svg+xml']),
+                    ->helperText($this->uploadHelperText(
+                        'favicon',
+                        '支持 '.$this->acceptedExtensions('favicon').'，为空则使用浏览器默认图标',
+                    ))
+                    ->acceptedFileTypes((array) config('nova-admin.site_settings.favicon.accepted_types'))
+                    ->maxSize(config('nova-admin.site_settings.favicon.max_size') ?: null),
                 $key === 'logo_path'        => $this->fileUpload($key, $label)
-                    ->helperText('上传后在导航栏展示，未上传则不显示')
-                    ->image(),
+                    ->helperText($this->uploadHelperText('logo', '上传后在导航栏展示，未上传则不显示'))
+                    ->image()
+                    ->maxSize(config('nova-admin.site_settings.logo.max_size') ?: null),
+                $key === 'contact_email'    => TextInput::make($key)
+                    ->label($label)
+                    ->email()
+                    ->maxLength(254),
                 $key === 'meta_description' => Textarea::make($key)->label($label)->rows(3),
                 default                     => TextInput::make($key)->label($label),
             };
         }
 
         return $components;
+    }
+
+    /** 上传限制来自 config，helperText 里把大小上限一并说明，避免用户传完才被拒。 */
+    protected function uploadHelperText(string $which, string $base): string
+    {
+        $maxSize = (int) config("nova-admin.site_settings.$which.max_size");
+
+        return $maxSize > 0
+            ? $base.'，最大 '.$this->humanSize($maxSize)
+            : $base;
+    }
+
+    protected function humanSize(int $kb): string
+    {
+        return $kb >= 1024 ? round($kb / 1024, 1).' MB' : $kb.' KB';
+    }
+
+    /** MIME → 扩展名，用于 helperText 里列出可接受的类型。未收录的按子类型兜底。 */
+    protected function acceptedExtensions(string $which): string
+    {
+        $known = [
+            'image/x-icon'    => 'ico',
+            'image/vnd.microsoft.icon' => 'ico',
+            'image/png'       => 'png',
+            'image/jpeg'      => 'jpg',
+            'image/svg+xml'   => 'svg',
+            'image/webp'      => 'webp',
+        ];
+
+        $types = (array) config("nova-admin.site_settings.$which.accepted_types");
+
+        return implode(' / ', array_map(
+            fn (string $type) => '.'.($known[$type] ?? (explode('/', $type)[1] ?? $type)),
+            $types,
+        ));
     }
 
     protected function fileUpload(string $key, string $label): FileUpload
