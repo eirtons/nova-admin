@@ -69,7 +69,12 @@ php artisan serve
 
 {{-- 放在页面展示位置，输出 body_code；无生效广告时不产生 DOM --}}
 <x-ad-body position="home_banner1" />
+
+{{-- 浮层类广告（anchor / interstitial 等）自己定位，不要套居中容器 --}}
+<x-ad-body position="anchor" :wrapper="false" />
 ```
+
+`<x-ad-head>` 与 `<x-ad-body>` 必须成对出现：只放 head 不放 body，后台填的 body 代码就永远不会渲染。
 
 ```php
 site_config('site_name');        // 读站点配置
@@ -200,12 +205,20 @@ __SITE_AD_CONFIG_RESULT_BEGIN__{"slots":{"status":"success","written_positions":
 `config('nova-admin.ads_protocol.position_map')`：协议键带下划线（`home_banner_1`），
 本包 position 不带（`home_banner1`），站点只用部分广告位时删掉对应行即可。
 
-前台模板注意 GPT 的顺序要求——slot 定义必须早于 `enableServices`，即 `global_head` 放最后：
+前台模板注意 GPT 的顺序要求——slot 定义必须早于 `enableServices`，即 `global_head` 放最后。
+**每个投了 `<x-ad-head>` 的 position，都必须在同页输出对应的 `<x-ad-body>`**，否则后台
+填的 body 代码永远不会出现在页面上（这类漏配没有任何报错，只是广告不展示）：
 
 ```blade
+{{-- <head> 内 --}}
 <x-ad-head position="anchor" />
 <x-ad-head position="interstitial" />
 <x-ad-head position="global_head" />
+
+{{-- <body> 开头，顺序与 head 一致；浮层广告自己定位，用 :wrapper="false" 去掉居中容器 --}}
+<x-ad-body position="anchor" :wrapper="false" />
+<x-ad-body position="interstitial" :wrapper="false" />
+<x-ad-body position="global_head" :wrapper="false" />
 ```
 
 ---

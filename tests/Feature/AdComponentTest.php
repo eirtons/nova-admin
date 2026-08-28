@@ -59,6 +59,35 @@ class AdComponentTest extends TestCase
         $this->assertSame('', Blade::render('<x-ad-body position="unknown" />'));
     }
 
+    public function test_body_ad_without_wrapper_is_rendered_bare(): void
+    {
+        $this->app->instance(AdService::class, new class extends AdService
+        {
+            public function body(string $position): string
+            {
+                return '<ins data-position="'.$position.'"></ins>';
+            }
+        });
+
+        $html = Blade::render('<x-ad-body position="anchor" :wrapper="false" />');
+
+        $this->assertSame('<ins data-position="anchor"></ins>', $html);
+    }
+
+    public function test_whitespace_only_body_ad_does_not_render_a_container(): void
+    {
+        $this->app->instance(AdService::class, new class extends AdService
+        {
+            public function body(string $position): string
+            {
+                return "  \n\t ";
+            }
+        });
+
+        $this->assertSame('', Blade::render('<x-ad-body position="home_banner1" />'));
+        $this->assertSame('', Blade::render('<x-ad-body position="home_banner1" :wrapper="false" />'));
+    }
+
     public function test_head_ad_is_rendered_without_a_container(): void
     {
         $this->app->instance(AdService::class, new class extends AdService
