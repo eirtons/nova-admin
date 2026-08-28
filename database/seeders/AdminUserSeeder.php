@@ -50,15 +50,16 @@ class AdminUserSeeder extends Seeder
                 return true;
             }
 
-            $userModel::query()->updateOrCreate(
-                ['email' => $email],
-                $attributes,
-            );
+            // updateOrCreate 受 $fillable 约束，多数项目的 User 没把 is_admin 列进去，
+            // 会被静默丢弃造出一个没有后台权限的“管理员”。这里必须绕过批量赋值保护。
+            $user = $userModel::query()->firstOrNew(['email' => $email]);
+            $user->forceFill($attributes)->save();
 
-            $this->command?->info("默认管理员已就绪：账号 {$name} / 密码 {$password}。");
+            // 密码不输出到控制台：部署日志通常会被采集留存。
+            $this->command?->info("管理员已就绪：账号 {$name}。密码不会输出到控制台。");
 
             if (app()->environment('production')) {
-                $this->command?->warn('当前为 production 环境，默认管理员为 nova/nova，请立即登录后台修改密码！');
+                $this->command?->warn('当前为 production 环境，默认管理员使用的是配置中的默认密码，请立即登录后台修改！');
             }
 
             return true;
