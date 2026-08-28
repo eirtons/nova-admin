@@ -45,7 +45,7 @@ class NovaAdminServiceProvider extends ServiceProvider
 
         config([
             'logging.channels.single.driver' => 'daily',
-            'logging.channels.single.days'   => (int) env('LOG_DAILY_DAYS', 14),
+            'logging.channels.single.days'   => (int) config('logging.channels.daily.days', 14),
         ]);
     }
 
@@ -86,7 +86,11 @@ class NovaAdminServiceProvider extends ServiceProvider
      */
     protected function trustProxies(): void
     {
-        TrustProxies::at('*');
+        $trustedProxies = config('nova-admin.trusted_proxies');
+
+        if (filled($trustedProxies)) {
+            TrustProxies::at($trustedProxies);
+        }
     }
 
     protected function ensureLivewireAssetsPublished(): void

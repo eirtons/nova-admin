@@ -19,15 +19,14 @@ class AdBody extends Component
 
     public function shouldRender(): bool
     {
-        return $this->html !== '';
+        return trim($this->html) !== '';
     }
 
     public function render(): HtmlString
     {
-        return new HtmlString(
-            '<div style="width: 100% !important; text-align: center !important; margin: 10px auto !important; overflow: hidden !important;">'
-            .$this->html
-            .'</div>'
-        );
+        return new HtmlString(view('nova-admin::components.ad-slot', [
+            'html' => $this->html,
+            'position' => $this->position,
+        ])->render());
     }
 }

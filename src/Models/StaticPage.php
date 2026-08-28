@@ -49,7 +49,9 @@ class StaticPage extends Model implements HasRichContent
      */
     public function getBodyHtmlAttribute(): string
     {
-        return trim((string) preg_replace('/^\s*<h1[^>]*>.*?<\/h1>/is', '', (string) $this->content, 1));
+        $safeHtml = (string) $this->renderRichContent('content');
+
+        return trim((string) preg_replace('/^\s*<h1[^>]*>.*?<\/h1>/is', '', $safeHtml, 1));
     }
 
     protected static function leadingH1Text(string $content): string

@@ -7,20 +7,28 @@ use Illuminate\Database\QueryException;
 
 class SiteConfigService
 {
+    /** @var array<string, mixed> */
+    protected array $resolved = [];
+
     public function get(string $key, mixed $default = null): mixed
     {
+        // 单次请求里 site_name / meta 之类会被反复读取，命中即复用，避免重复查表。
+        if (array_key_exists($key, $this->resolved)) {
+            return $this->resolved[$key];
+        }
+
         try {
             $row = SiteConfig::query()->where('key', $key)->first();
         } catch (QueryException) {
-            // Frontend helpers may run before the package migrations on first deploy.
-            return $default;
+            // 首次部署迁移前，前台 helper 也应能用配置默认值正常渲染。
+            return $this->resolved[$key] = $default;
         }
 
         if ($row === null) {
-            return $default;
+            return $this->resolved[$key] = $default;
         }
 
-        return $this->cast($row->value, $row->type);
+        return $this->resolved[$key] = $this->cast($row->value, $row->type);
     }
 
     public function set(string $key, mixed $value, ?string $type = null, ?string $group = null): void
@@ -37,11 +45,15 @@ class SiteConfigService
                 'group' => $group ?? $existing?->group,
             ]
         );
+
+        unset($this->resolved[$key]);
     }
 
     public function forget(string $key): void
     {
         SiteConfig::query()->where('key', $key)->delete();
+
+        unset($this->resolved[$key]);
     }
 
     protected function cast(?string $value, string $type): mixed

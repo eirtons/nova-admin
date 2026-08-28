@@ -87,6 +87,58 @@ class AdComponentTest extends TestCase
         $this->assertSame('', Blade::render('<x-ad-head position="global_head" />'));
     }
 
+    public function test_whitespace_only_ad_code_does_not_render_a_container(): void
+    {
+        $this->app->instance(AdService::class, new class extends AdService
+        {
+            public function body(string $position): string
+            {
+                return "  \n\t ";
+            }
+        });
+
+        $this->assertSame('', trim(Blade::render('<x-ad-body position="home_banner1" />')));
+    }
+
+    public function test_project_can_override_the_ad_slot_wrapper_view(): void
+    {
+        view()->prependNamespace('nova-admin', $dir = sys_get_temp_dir().'/'.uniqid('nova-admin-views-', true));
+        mkdir($dir.'/components', 0777, true);
+        file_put_contents(
+            $dir.'/components/ad-slot.blade.php',
+            '<aside class="ad-slot" data-ad-position="{{ $position }}">{!! $html !!}</aside>',
+        );
+
+        $this->app->instance(AdService::class, new class extends AdService
+        {
+            public function body(string $position): string
+            {
+                return '<ins></ins>';
+            }
+        });
+
+        $html = Blade::render('<x-ad-body position="home_banner1" />');
+
+        $this->assertStringContainsString('<aside class="ad-slot" data-ad-position="home_banner1">', $html);
+        $this->assertStringNotContainsString('width: 100% !important', $html);
+    }
+
+    public function test_all_active_spots_are_fetched_in_a_single_query(): void
+    {
+        AdSpot::query()->create(['position' => 'home_banner1', 'body_code' => '<i>1</i>', 'is_active' => true]);
+        AdSpot::query()->create(['position' => 'home_banner2', 'body_code' => '<i>2</i>', 'is_active' => true]);
+
+        $ads = app(AdService::class);
+        $queries = 0;
+        \Illuminate\Support\Facades\DB::listen(function () use (&$queries) {
+            $queries++;
+        });
+
+        $this->assertSame('<i>1</i>', $ads->body('home_banner1'));
+        $this->assertSame('<i>2</i>', $ads->body('home_banner2'));
+        $this->assertSame(1, $queries);
+    }
+
     public function test_ad_changes_are_visible_without_clearing_cache(): void
     {
         $ad = AdSpot::query()->create([

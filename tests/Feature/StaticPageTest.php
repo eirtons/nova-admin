@@ -4,6 +4,8 @@ namespace Inova\NovaAdmin\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inova\NovaAdmin\Models\StaticPage;
+use Filament\Support\SupportServiceProvider;
+use Livewire\LivewireServiceProvider;
 use Inova\NovaAdmin\NovaAdminServiceProvider;
 use Orchestra\Testbench\TestCase;
 
@@ -13,7 +15,7 @@ class StaticPageTest extends TestCase
 
     protected function getPackageProviders($app): array
     {
-        return [NovaAdminServiceProvider::class];
+        return [LivewireServiceProvider::class, SupportServiceProvider::class, NovaAdminServiceProvider::class];
     }
 
     public function test_leading_h1_becomes_title_and_is_stripped_from_body_html(): void

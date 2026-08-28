@@ -19,7 +19,7 @@ class AdHead extends Component
 
     public function shouldRender(): bool
     {
-        return $this->html !== '';
+        return trim($this->html) !== '';
     }
 
     public function render(): HtmlString

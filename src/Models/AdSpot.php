@@ -3,6 +3,7 @@
 namespace Inova\NovaAdmin\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Inova\NovaAdmin\Services\AdService;
 
 class AdSpot extends Model
 {
@@ -18,6 +19,13 @@ class AdSpot extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        // AdService 在请求内缓存全部启用广告位；后台一保存就得让缓存失效。
+        static::saved(fn () => app(AdService::class)->flush());
+        static::deleted(fn () => app(AdService::class)->flush());
+    }
 
     /**
      * 清空并按配置填充全部广告位的测试代码并启用。返回填充条数。
