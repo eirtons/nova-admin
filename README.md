@@ -50,7 +50,7 @@ php artisan serve
 | 广告管理（一位多条、按序输出、代码框语法高亮） | 后台「广告管理」 |
 | 站点设置（基础/SEO/媒体/品牌） | 后台「站点设置」 |
 | 静态页面（关于/隐私/条款等富文本落地页，可增删改） | 后台「静态页面」 |
-| ads.txt 编辑 | 后台「Ads.txt」+ `GET /ads.txt` |
+| ads.txt 编辑（DB + 静态文件双写，支持几千行大清单） | 后台「Ads.txt」+ `GET /ads.txt` |
 | 站点广告配置下发（webdeploy 协议） | `php artisan ads:import-site-ad-config <file>` |
 | robots.txt 编辑（含默认模板） | 后台「Robots.txt」+ `GET /robots.txt` |
 | sitemap.xml（静态条目 + 项目注册动态来源，带缓存） | `GET /sitemap.xml` |
@@ -192,6 +192,7 @@ webdeploy 把 GAM 广告位代码与 ads.txt 打成一个 JSON 下发到站点�
 ```
 
 - `slots` → `ad_spots`（按 `position` 覆盖式写入并置为启用），`ads_txt` → 与后台「Ads.txt」页同一条存储路径（DB + `public/ads.txt`）。
+  静态文件走「临时文件 + rename」原子替换，写到一半失败不会留下截断的 ads.txt；写文件失败仍会落库，由 `/ads.txt` 路由兜底动态输出。
 - **两个部件各自独立成败**：未下发的部件不出现在回包里；下发了却写不进去的部件必须回 `failed`，不会静默略过。
 - `slots` 内部是一个事务：任一广告位结构非法、协议键未知、或映射目标未在 `ad_positions` 启用，整批回滚。
 - `slots` 必须包含 `global_head`（承载 loader 与 `enableServices`）。

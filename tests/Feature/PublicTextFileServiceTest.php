@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Inova\NovaAdmin\NovaAdminServiceProvider;
 use Inova\NovaAdmin\Services\PublicTextFileService;
+use Inova\NovaAdmin\Services\SiteConfigService;
 use Orchestra\Testbench\TestCase;
 
 class PublicTextFileServiceTest extends TestCase
@@ -70,5 +71,45 @@ class PublicTextFileServiceTest extends TestCase
         $this->assertStringContainsString("Disallow: /admin\n", $content);
         $this->assertStringContainsString("Disallow: /login\n", $content);
         $this->assertStringNotContainsString('quick-login', $content);
+    }
+    public function test_large_ads_txt_is_stored_in_both_database_and_static_file(): void
+    {
+        $lines = [];
+        for ($i = 0; $i < 5000; $i++) {
+            $lines[] = "adform.com, {$i}, RESELLER, 9f5210a2f0999e32";
+        }
+        $content = implode("\n", $lines);
+
+        $result = app(PublicTextFileService::class)->save('ads_txt', $content);
+
+        $this->assertTrue($result['file_written']);
+
+        // 数据库：整份内容原样落 site_configs（longText，不截断）
+        $this->assertSame($content, app(SiteConfigService::class)->get('ads_txt_content'));
+
+        // 静态文件：内容完整，且原子写不留临时文件
+        $path = config('nova-admin.ads_txt.path');
+        $this->assertSame($content.PHP_EOL, File::get($path));
+        $this->assertSame([], glob($this->tempDir.'/*.tmp'));
+    }
+
+    public function test_failed_write_keeps_the_previous_ads_txt_intact(): void
+    {
+        $path = config('nova-admin.ads_txt.path');
+        File::put($path, "old.com, 1, DIRECT\n");
+
+        // 目录不可写 → 临时文件写不出去，旧 ads.txt 必须原封不动
+        chmod($this->tempDir, 0500);
+
+        try {
+            $result = app(PublicTextFileService::class)->save('ads_txt', "new.com, 2, DIRECT");
+        } finally {
+            chmod($this->tempDir, 0700);
+        }
+
+        $this->assertFalse($result['file_written']);
+        $this->assertSame("old.com, 1, DIRECT\n", File::get($path));
+        // 写文件失败也要落库，/ads.txt 路由兜底才有内容
+        $this->assertSame("new.com, 2, DIRECT", app(SiteConfigService::class)->get('ads_txt_content'));
     }
 }

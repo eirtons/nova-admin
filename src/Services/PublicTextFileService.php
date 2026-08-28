@@ -83,13 +83,40 @@ class PublicTextFileService
             if ($conf['empty_behavior'] === 'delete') {
                 File::delete($path);
             } else {
-                File::put($path, '');
+                $this->atomicPut($path, '');
             }
 
             return;
         }
 
-        File::put($path, $this->resolvePlaceholders($content).PHP_EOL);
+        $this->atomicPut($path, $this->resolvePlaceholders($content).PHP_EOL);
+    }
+
+    /**
+     * ads.txt 动辄几千行，直接覆盖写到一半失败会留下被爬虫抓走的截断清单。
+     * 同目录临时文件写全 + rename 原子替换：要么是旧内容，要么是完整新内容。
+     */
+    protected function atomicPut(string $path, string $content): void
+    {
+        $tmp = $path.'.'.bin2hex(random_bytes(4)).'.tmp';
+
+        try {
+            $written = File::put($tmp, $content);
+
+            if ($written === false || $written !== strlen($content)) {
+                throw new \RuntimeException("写入 {$path} 不完整");
+            }
+
+            if (! @rename($tmp, $path)) {
+                throw new \RuntimeException("替换 {$path} 失败");
+            }
+
+            @chmod($path, 0644);
+        } finally {
+            if (is_file($tmp)) {
+                @unlink($tmp);
+            }
+        }
     }
 
     /** {url} → 站点 URL（config('app.url')，与请求域名无关，便于换域名/CLI 一致）。 */

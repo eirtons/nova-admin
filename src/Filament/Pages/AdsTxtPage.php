@@ -32,6 +32,12 @@ class AdsTxtPage extends Page implements HasSchemas
 
     protected string $placeholder = 'google.com, pub-xxxxxxxxxxxxxxxx, DIRECT, f08c47fec0942fa0';
 
+    /** ads.txt 常见几千行，编辑框给足高度；robots.txt 只有十几行，子类调小。 */
+    protected int $rows = 28;
+
+    /** 当前已保存内容的规模提示，保存后刷新。 */
+    public string $sizeHint = '';
+
     public static function getNavigationGroup(): ?string
     {
         return config('nova-admin.navigation.groups.settings');
@@ -49,6 +55,17 @@ class AdsTxtPage extends Page implements HasSchemas
 
         // {url} 占位符按当前请求域名解析后展示
         $this->form->fill(['content' => $svc->resolvePlaceholders($content)]);
+
+        $this->sizeHint = $this->sizeHint($content);
+    }
+
+    protected function sizeHint(string $content): string
+    {
+        $content = trim($content);
+        $lines = $content === '' ? 0 : substr_count($content, "\n") + 1;
+        $kb = round(strlen($content) / 1024, 1);
+
+        return "当前 {$lines} 行 / {$kb} KB；保存后同时写入数据库与静态文件，写文件失败会降级为路由动态输出。";
     }
 
     public function form(Schema $schema): Schema
@@ -57,7 +74,9 @@ class AdsTxtPage extends Page implements HasSchemas
             ->components([
                 Textarea::make('content')
                     ->label($this->fieldLabel)
-                    ->rows(14)
+                    ->rows($this->rows)
+                    ->helperText(fn () => $this->sizeHint)
+                    ->extraInputAttributes(['style' => 'font-family: ui-monospace, SFMono-Regular, Menlo, monospace;'])
                     ->placeholder($this->placeholder),
             ])
             ->statePath('data');
@@ -66,8 +85,11 @@ class AdsTxtPage extends Page implements HasSchemas
 
     public function save(): void
     {
-        $result = app(PublicTextFileService::class)
-            ->save($this->configType, $this->form->getState()['content'] ?? '');
+        $content = (string) ($this->form->getState()['content'] ?? '');
+
+        $result = app(PublicTextFileService::class)->save($this->configType, $content);
+
+        $this->sizeHint = $this->sizeHint($content);
 
         if ($result['file_written']) {
             Notification::make()->title('已保存')->success()->send();

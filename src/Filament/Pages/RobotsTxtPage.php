@@ -15,6 +15,8 @@ class RobotsTxtPage extends AdsTxtPage
 
     protected string $configType = 'robots_txt';
 
+    protected int $rows = 14;
+
     protected string $fieldLabel = 'Robots.txt 内容';
 
     protected string $placeholder = "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /login\n\nSitemap: {url}/sitemap.xml";
