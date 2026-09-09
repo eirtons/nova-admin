@@ -61,7 +61,12 @@ class AdSpot extends Model
      */
     public static function deactivateAll(): int
     {
-        return static::query()->update(['is_active' => false]);
+        $affected = static::query()->update(['is_active' => false]);
+
+        // 批量更新不触发模型事件，得手动让请求内缓存失效
+        app(AdService::class)->flush();
+
+        return $affected;
     }
 
     private static function testHeadScript(): string
