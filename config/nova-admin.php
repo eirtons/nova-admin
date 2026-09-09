@@ -42,6 +42,8 @@ return [
     | 广告位枚举
     |--------------------------------------------------------------------------
     | 每个 position 对应一条 AdSpot 记录（position 唯一）。
+    |
+    | ⚠️ 只可追加，不可删行。详见下方 ads_protocol 的说明。
     */
     'ad_positions' => [
         'global_head'    => '全局 Head',
@@ -63,7 +65,11 @@ return [
     | position_map：协议键 → 本包 ad_positions 的 position。协议键带下划线分隔
     | （home_banner_1），本包 position 不带（home_banner1），必须显式映射。
     | 未在此列出的协议键一律判为未知键并整体失败；映射目标也必须在 ad_positions 里，
-    | 否则写进去 AdService 也不会输出。站点若只用部分广告位，删掉对应行即可。
+    | 否则写进去 AdService 也不会输出。
+    |
+    | ⚠️ 两个列表都只可追加、不可删行。没填代码的位不产生任何 DOM，删了没收益，
+    | 只会让平台勾到时整体失败；整块删 ads_protocol 更隐蔽——浅合并会让它悄悄
+    | 回落成包默认值。改完跑 `php artisan nova-admin:doctor` 自检。
     */
     'ads_protocol' => [
         'version'         => 1,

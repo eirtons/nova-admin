@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Inova\NovaAdmin\Console\Commands\ClearCacheCommand;
 use Inova\NovaAdmin\Console\Commands\CreateAdminCommand;
+use Inova\NovaAdmin\Console\Commands\DoctorCommand;
 use Inova\NovaAdmin\Console\Commands\ImportSiteAdConfigCommand;
 use Inova\NovaAdmin\Console\Commands\InstallCommand;
 use Inova\NovaAdmin\Console\Commands\SeedAdSpotsCommand;
@@ -71,6 +72,7 @@ class NovaAdminServiceProvider extends ServiceProvider
                 SeedAdSpotsCommand::class,
                 ImportSiteAdConfigCommand::class,
                 ClearCacheCommand::class,
+                DoctorCommand::class,
             ]);
 
             $this->ensureLivewireAssetsPublished();

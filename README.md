@@ -174,6 +174,7 @@ php artisan nova-admin:create-admin [--force]   # 创建/重置默认管理员
 php artisan ad:seed [--off]                     # 填充测试广告（先清空）/ 禁用广告
 php artisan nova-admin:clear-sitemap-cache       # 清 sitemap 缓存
 php artisan ads:import-site-ad-config <file>    # 导入 webdeploy 下发的站点广告配置
+php artisan nova-admin:doctor                   # 自检配置一致性（广告位与协议映射）
 ```
 
 ### 站点广告配置下发协议（webdeploy）
