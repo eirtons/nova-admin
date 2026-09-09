@@ -6,6 +6,7 @@
 
 ## [未发布]
 
+## [1.5.1] - 2026-09-08
 ### 新增
 - CI：GitHub Actions 在 push（master 与 `v*` tag）和 PR 时跑 PHPUnit（PHP 8.2）
 - 本更新日志
