@@ -6,6 +6,20 @@
 
 ## [未发布]
 
+## [1.6.0] - 2026-09-11
+### 新增
+- `Inova\NovaAdmin\Http\Middleware\CacheablePage`：给包注册的前台响应补 `Cache-Control`（`public` + `max-age` + `s-maxage` + `stale-while-revalidate`），边缘副本按自然日封顶，避免跨天把昨天的内容带到今天
+- 配置 `nova-admin.page_cache.ttl` / `cdn_ttl`（默认 600 / 86400 秒）。宿主若有 `config/page-cache.php` 以宿主为准，这里只是老项目的回退默认值
+- 配置 `nova-admin.static_pages.frontend.cacheable`（env `NOVA_STATIC_FRONTEND_CACHEABLE`，默认 `true`）
+
+### 变更
+- **静态页前台路由默认不再挂 `web` 中间件组**。原本每个静态页响应都带 `Set-Cookie`，Cloudflare 一律按 `DYNAMIC` 处理、每次回源，`/about`、`/privacy-policy` 这类几乎永不变的页面完全进不了边缘缓存。改挂 `CacheablePage` 后无 Cookie、可缓存。
+- `ads.txt` / `robots.txt` / `sitemap.xml` 三个路由同样挂上 `CacheablePage`
+
+### 升级注意
+- 包内默认静态页模板不含表单，脱离会话无影响。**若项目用 `static_pages.frontend.view` 指向了自己的模板，且模板里有 `@csrf` 表单或引用 `$errors`**，升级后会 419 或 500 —— 置 `NOVA_STATIC_FRONTEND_CACHEABLE=false` 可退回 `web` 组。
+- 宿主前台若也脱离了会话，建议在 `AppServiceProvider::boot()` 里 `View::share('errors', new ViewErrorBag)` 兜底，避免视图引用 `$errors` 时 500。
+
 ## [1.5.1] - 2026-09-08
 ### 新增
 - CI：GitHub Actions 在 push（master 与 `v*` tag）和 PR 时跑 PHPUnit（PHP 8.2）

@@ -5,6 +5,7 @@ namespace Inova\NovaAdmin;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
+use Inova\NovaAdmin\Http\Middleware\CacheablePage;
 use Illuminate\Support\ServiceProvider;
 use Inova\NovaAdmin\Console\Commands\ClearCacheCommand;
 use Inova\NovaAdmin\Console\Commands\CreateAdminCommand;
@@ -134,24 +135,27 @@ class NovaAdminServiceProvider extends ServiceProvider
         $this->registerStaticPageFrontend();
 
         if (config('nova-admin.ads_txt.enabled', true)) {
-            Route::get('/ads.txt', function (PublicTextFileService $svc) {
-                return response($svc->read('ads_txt'), 200)
-                    ->header('Content-Type', 'text/plain; charset=UTF-8');
-            })->name('nova-admin.ads-txt');
+            Route::middleware(CacheablePage::class)
+                ->get('/ads.txt', function (PublicTextFileService $svc) {
+                    return response($svc->read('ads_txt'), 200)
+                        ->header('Content-Type', 'text/plain; charset=UTF-8');
+                })->name('nova-admin.ads-txt');
         }
 
         if (config('nova-admin.robots_txt.enabled', true)) {
-            Route::get('/robots.txt', function (PublicTextFileService $svc) {
-                return response($svc->read('robots_txt'), 200)
-                    ->header('Content-Type', 'text/plain; charset=UTF-8');
-            })->name('nova-admin.robots-txt');
+            Route::middleware(CacheablePage::class)
+                ->get('/robots.txt', function (PublicTextFileService $svc) {
+                    return response($svc->read('robots_txt'), 200)
+                        ->header('Content-Type', 'text/plain; charset=UTF-8');
+                })->name('nova-admin.robots-txt');
         }
 
         if (config('nova-admin.sitemap.enabled')) {
-            Route::get('/sitemap.xml', function (SitemapService $svc) {
-                return response($svc->xml(), 200)
-                    ->header('Content-Type', 'application/xml; charset=UTF-8');
-            })->name('nova-admin.sitemap');
+            Route::middleware(CacheablePage::class)
+                ->get('/sitemap.xml', function (SitemapService $svc) {
+                    return response($svc->xml(), 200)
+                        ->header('Content-Type', 'application/xml; charset=UTF-8');
+                })->name('nova-admin.sitemap');
         }
 
     }
@@ -172,7 +176,14 @@ class NovaAdminServiceProvider extends ServiceProvider
             return;
         }
 
-        Route::middleware('web')
+        // 刻意不挂 web 组：静态页是纯展示内容，不需要会话，
+        // 带 Set-Cookie 的响应 Cloudflare 一律拒绝缓存。
+        // 若项目把该视图换成了含表单的模板，用 static_pages.frontend.cacheable=false 退回 web 组。
+        $middleware = config('nova-admin.static_pages.frontend.cacheable', true)
+            ? [CacheablePage::class]
+            : ['web'];
+
+        Route::middleware($middleware)
             ->get('/{staticPageSlug}', function (string $staticPageSlug) {
                 $page = static_page($staticPageSlug);
                 abort_if($page === null, 404);

@@ -164,6 +164,20 @@ return [
     | view 可换成项目自己的 Blade（多主题项目指向主题 page 模板），
     | 模板契约：$page->title / $page->body_html（已剥标题 H1）/ $page->meta_description。
     */
+    /*
+    |--------------------------------------------------------------------------
+    | 包自己注册的前台响应缓存时长（秒）
+    |--------------------------------------------------------------------------
+    |
+    | 宿主若有 config/page-cache.php（做过前台缓存改造）以宿主的为准，
+    | 这里只是老项目的回退默认值。
+    |
+    */
+    'page_cache' => [
+        'ttl' => (int) env('PAGE_CACHE_TTL', 600),
+        'cdn_ttl' => (int) env('PAGE_CACHE_CDN_TTL', 86400),
+    ],
+
     'static_pages' => [
         'enabled' => true,
         'site_description' => env('NOVA_SITE_DESCRIPTION', 'an online service'),
@@ -178,6 +192,10 @@ return [
             'cookie-policy'    => ['Cookie Policy', 'Cookie 政策'],
         ],
         'frontend' => [
+            // 静态页脱离 web 组（无会话、无 Cookie）才能进 CDN 边缘缓存。
+            // 若把 view 换成了含 @csrf 表单的模板，置 false 退回 web 组。
+            'cacheable' => env('NOVA_STATIC_FRONTEND_CACHEABLE', true),
+
             'enabled'    => env('NOVA_STATIC_FRONTEND', false),
             'view'       => 'nova-admin::static-page',
             'route_name' => 'pages.show',
