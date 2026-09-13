@@ -5,6 +5,8 @@
 新增条目写在「未发布」下，打 tag 时整段移到新版本标题下。
 
 ## [未发布]
+
+## [1.6.1] - 2026-09-12
 ### 变更
 - `nova-admin.page_cache.ttl` 回退默认值 600 → 3600 秒，与各站 `config/page-cache.php` 对齐。
   仅影响没有 `config/page-cache.php` 的项目；有该文件的以宿主为准，不受影响。
