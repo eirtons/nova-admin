@@ -174,7 +174,7 @@ return [
     |
     */
     'page_cache' => [
-        'ttl' => (int) env('PAGE_CACHE_TTL', 600),
+        'ttl' => (int) env('PAGE_CACHE_TTL', 3600),
         'cdn_ttl' => (int) env('PAGE_CACHE_CDN_TTL', 86400),
     ],
 
