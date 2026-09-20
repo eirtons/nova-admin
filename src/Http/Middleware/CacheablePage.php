@@ -21,6 +21,13 @@ class CacheablePage
     {
         $response = $next($request);
 
+        // 开发与测试环境一律不发缓存头：max-age 那份副本在浏览器里，谁也清不掉，
+        // 后台切换主题、改站点配置后前台还会拿旧页面（点链接回来时尤其明显，
+        // 只有按 F5 才会回源）。本地调试不需要这点缓存收益。
+        if (app()->environment('local', 'testing')) {
+            return $response;
+        }
+
         $ttl = (int) config('page-cache.ttl', config('nova-admin.page_cache.ttl', 600));
         $cdnTtl = (int) config('page-cache.cdn_ttl', config('nova-admin.page_cache.cdn_ttl', 86400));
 
