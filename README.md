@@ -106,6 +106,18 @@ php artisan serve
 
 `static_pages.footer_views` 里的视图（默认 `layouts.app`）会拿到 `$footerPages`：已启用的静态页，按 presets 顺序排列。
 
+### SEO 与站点设置
+
+布局 `<head>` 里放 `<x-nova-seo />`，按后台「站点设置」输出 `<title>`（按 `meta_title_template` 拼装，
+支持 `{title}`、`{site_name}`、`%s`）、description、keywords、canonical、favicon、OG / Twitter 卡片。
+页面用 `@section('title', 'About')` 只写自身标题；`description`、`canonical`、`og_image` 同理可用 section 或同名属性覆盖。
+未写 title 的页面（通常是首页）取「站点名 - 副标题」。
+
+```php
+site_setting('copyright');        // 站点设置值，未保存过时回退 nova-admin.site_defaults
+site_media_url('logo_path');      // 上传的 Logo / Favicon 的 URL，未设置返回 null
+```
+
 ```php
 site_config('site_name');        // 读站点配置
 

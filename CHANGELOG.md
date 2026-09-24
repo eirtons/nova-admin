@@ -6,6 +6,13 @@
 
 ## [未发布]
 
+## [2.2.0] - 2026-09-23
+### 新增
+- `<x-nova-seo />`：按后台「站点设置」输出 title（`meta_title_template`，支持 `{title}` / `{site_name}` / `%s`）、
+  description、keywords、canonical、favicon、OG / Twitter 卡片；页面用 `@section('title' | 'description' | 'canonical' | 'og_image')` 覆盖。
+  此前站点设置页的 SEO、副标题、版权、Favicon、Logo 需要各站自己在布局里接，未接的前台看不到后台改动。
+- helper `site_setting()`（未保存时回退 `site_defaults`）与 `site_media_url()`。
+
 ## [2.1.0] - 2026-09-23
 ### 新增
 - `Inova\NovaAdmin\Concerns\HasNovaAdminAccess`：后台准入统一为「`nova-admin.panel.id` 对应的 Panel 且 `users.is_admin` 为真」。

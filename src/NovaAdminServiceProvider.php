@@ -29,6 +29,7 @@ use Inova\NovaAdmin\View\Components\AdBody;
 use Inova\NovaAdmin\View\Components\AdHead;
 use Inova\NovaAdmin\View\Components\AdLayoutBody;
 use Inova\NovaAdmin\View\Components\AdLayoutHead;
+use Inova\NovaAdmin\View\Components\Seo;
 
 class NovaAdminServiceProvider extends ServiceProvider
 {
@@ -118,6 +119,7 @@ class NovaAdminServiceProvider extends ServiceProvider
             'ad-head' => AdHead::class,
             'ad-layout-body' => AdLayoutBody::class,
             'ad-layout-head' => AdLayoutHead::class,
+            'nova-seo' => Seo::class,
         ]);
 
         $this->trustProxies();
