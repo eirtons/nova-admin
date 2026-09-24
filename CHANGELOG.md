@@ -6,6 +6,15 @@
 
 ## [未发布]
 
+## [2.1.0] - 2026-09-23
+### 新增
+- `Inova\NovaAdmin\Concerns\HasNovaAdminAccess`：后台准入统一为「`nova-admin.panel.id` 对应的 Panel 且 `users.is_admin` 为真」。
+  `nova-admin:install` 给 User 接入 `FilamentUser` 并 use 该 trait（原先写入 `return true`，任何用户都能进后台）；User 已有 `canAccessPanel` 的不动。
+- `nova-admin:doctor` 模板检查新增：动态 `:position`、模板引用未启用的广告位，均判失败。
+
+### 修复
+- install 插入 import 时不再在 namespace 后留下多余空行，trait 与原有 `@use` 注释不再错位。
+
 ## [2.0.0] - 2026-09-23
 本版起 nova-admin 是底层核心库，`nova-laravel-starter` 只保留前台薄骨架；可复用逻辑全部收进包，改包发版、项目升级即得。
 

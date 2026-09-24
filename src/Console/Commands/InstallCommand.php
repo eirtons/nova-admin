@@ -96,12 +96,13 @@ class InstallCommand extends Command
             return;
         }
 
-        if (str_contains($contents, 'FilamentUser') && str_contains($contents, 'canAccessPanel')) {
+        // 项目已自行实现准入规则的不动
+        if (str_contains($contents, 'canAccessPanel') || str_contains($contents, 'HasNovaAdminAccess')) {
             return;
         }
 
         $updated = $this->ensureUseStatement($contents, 'Filament\\Models\\Contracts\\FilamentUser');
-        $updated = $this->ensureUseStatement($updated, 'Filament\\Panel');
+        $updated = $this->ensureUseStatement($updated, 'Inova\\NovaAdmin\\Concerns\\HasNovaAdminAccess');
 
         if (! str_contains($updated, 'implements FilamentUser')) {
             // 已有 implements：追加到列表末尾；否则给 class 加上 implements 子句
@@ -130,34 +131,26 @@ class InstallCommand extends Command
             }
         }
 
-        if (! str_contains($updated, 'canAccessPanel')) {
-            $method = <<<'PHP'
+        // trait 放在类体第一行，与原有的 use HasFactory... 分开，不打乱其 @use 注释
+        $updated = preg_replace(
+            '/(class\s+User[^{]*\{\r?\n)/',
+            "$1    use HasNovaAdminAccess;\n\n",
+            $updated,
+            1,
+            $count,
+        );
 
-    public function canAccessPanel(Panel $panel): bool
-    {
-        return true;
-    }
+        if ($count !== 1) {
+            $this->warn('无法自动接入 HasNovaAdminAccess，请手动在 User 模型中 use 该 trait。');
 
-PHP;
-            $updated = preg_replace(
-                '/(class\s+User[^{]*\{\s*)/',
-                "$1{$method}",
-                $updated,
-                1,
-                $count,
-            );
-
-            if ($count !== 1) {
-                $this->warn('无法自动添加 canAccessPanel 方法，请手动实现 FilamentUser。');
-
-                return;
-            }
+            return;
         }
 
         file_put_contents($path, $updated);
-        $this->info('已将 App\\Models\\User 接入 FilamentUser，避免后台登录后 403。');
+        $this->info('已将 App\\Models\\User 接入 FilamentUser + HasNovaAdminAccess（仅 is_admin 用户可进后台）。');
     }
 
+    /** import 插到第一条顶层 use 之前，保持 import 区连续；没有 import 时放在 namespace 之后。 */
     protected function ensureUseStatement(string $contents, string $use): string
     {
         $statement = "use {$use};";
@@ -165,9 +158,13 @@ PHP;
             return $contents;
         }
 
+        if (preg_match('/^use\s/m', $contents)) {
+            return preg_replace('/^use\s/m', "{$statement}\nuse ", $contents, 1) ?? $contents;
+        }
+
         return preg_replace(
             '/(namespace\s+[^;]+;\s*)/',
-            "$1\n{$statement}\n",
+            "$1{$statement}\n\n",
             $contents,
             1,
         ) ?? $contents;

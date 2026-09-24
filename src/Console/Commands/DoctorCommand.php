@@ -49,18 +49,32 @@ class DoctorCommand extends Command
     }
 
     /**
-     * 内容位由各页面模板放置，包无法代劳：扫描模板里的 <x-ad-head> / <x-ad-body>，
-     * 只有一半的位广告永远不展示，直接判失败；完全没放的位可能是预留位，默认只警告。
+     * 内容位由各页面模板放置，包无法代劳：扫描模板里的 <x-ad-head> / <x-ad-body>。
+     * 以下直接判失败：只放了一半的位（广告永远不展示）、动态 :position（静态检查失效）、
+     * 引用了未启用的位（AdService 不会输出）。完全没放的位可能是预留位，默认只警告。
      */
     protected function checkTemplates(): bool
     {
         $found = ['head' => [], 'body' => []];
+        $errors = [];
+        $enabled = (array) config('nova-admin.ad_positions', []);
 
         foreach ($this->bladeFiles() as $file) {
-            preg_match_all('/<x-ad-(head|body)\b[^>]*?\sposition\s*=\s*["\']([^"\']+)["\']/', File::get($file), $matches, PREG_SET_ORDER);
+            $source = File::get($file);
+            $name = ltrim(str_replace(base_path(), '', $file), DIRECTORY_SEPARATOR);
+
+            if (preg_match('/<x-ad-(?:head|body)\b[^>]*\s:position\s*=/', $source)) {
+                $errors[] = "{$name} 用了动态 :position，广告位必须写成字面量 position=\"...\"";
+            }
+
+            preg_match_all('/<x-ad-(head|body)\b[^>]*?\sposition\s*=\s*["\']([^"\']+)["\']/', $source, $matches, PREG_SET_ORDER);
 
             foreach ($matches as [, $side, $position]) {
                 $found[$side][$position] = true;
+
+                if (! array_key_exists($position, $enabled)) {
+                    $errors[] = "{$name} 引用的广告位 {$position} 未在 ad_positions 中启用";
+                }
             }
         }
 
@@ -78,7 +92,11 @@ class DoctorCommand extends Command
         }
 
         foreach ($halfPaired as $line) {
-            $this->error("内容位 {$line}：head 与 body 必须成对，否则广告永远不展示");
+            $errors[] = "内容位 {$line}：head 与 body 必须成对，否则广告永远不展示";
+        }
+
+        foreach (array_unique($errors) as $line) {
+            $this->error($line);
         }
 
         if ($missing !== []) {
@@ -86,11 +104,11 @@ class DoctorCommand extends Command
             $this->option('strict') ? $this->error($message) : $this->warn($message);
         }
 
-        if ($halfPaired === [] && $missing === []) {
+        if ($errors === [] && $missing === []) {
             $this->info('模板广告渲染点完整。');
         }
 
-        return $halfPaired === [] && ($missing === [] || ! $this->option('strict'));
+        return $errors === [] && ($missing === [] || ! $this->option('strict'));
     }
 
     /** @return list<string> */

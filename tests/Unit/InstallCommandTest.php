@@ -74,12 +74,15 @@ class InstallCommandTest extends TestCase
 
 namespace App\Models;
 
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 }
 PHP);
@@ -114,13 +117,31 @@ PHP);
 
         $command->ensureFilamentUserAccessForTest();
 
-        $contents = file_get_contents($path);
+        $this->assertSame(<<<'PHP'
+<?php
 
-        $this->assertStringContainsString('use Filament\\Models\\Contracts\\FilamentUser;', $contents);
-        $this->assertStringContainsString('use Filament\\Panel;', $contents);
-        $this->assertStringContainsString('class User extends Authenticatable implements FilamentUser', $contents);
-        $this->assertStringContainsString('public function canAccessPanel(Panel $panel): bool', $contents);
-        $this->assertStringContainsString('return true;', $contents);
+namespace App\Models;
+
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Inova\NovaAdmin\Concerns\HasNovaAdminAccess;
+use Filament\Models\Contracts\FilamentUser;
+use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class User extends Authenticatable implements FilamentUser
+{
+    use HasNovaAdminAccess;
+
+    /** @use HasFactory<UserFactory> */
+    use HasFactory, Notifiable;
+}
+PHP, file_get_contents($path));
+
+        // 再跑一次不重复修改
+        $command->ensureFilamentUserAccessForTest();
+        $this->assertSame(1, substr_count(file_get_contents($path), 'use HasNovaAdminAccess;'));
 
         @unlink($path);
     }

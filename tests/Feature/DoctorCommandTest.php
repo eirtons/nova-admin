@@ -73,4 +73,22 @@ class DoctorCommandTest extends TestCase
             ->expectsOutputToContain('模板广告渲染点完整')
             ->assertExitCode(0);
     }
+
+    public function test_dynamic_position_fails(): void
+    {
+        $this->withViews(['home.blade.php' => '<x-ad-head :position="$slot" /><x-ad-body :position="$slot" />']);
+
+        $this->artisan('nova-admin:doctor')
+            ->expectsOutputToContain('动态 :position')
+            ->assertExitCode(1);
+    }
+
+    public function test_unknown_position_in_template_fails(): void
+    {
+        $this->withViews(['home.blade.php' => '<x-ad-head position="ghost" /><x-ad-body position="ghost" />']);
+
+        $this->artisan('nova-admin:doctor')
+            ->expectsOutputToContain('引用的广告位 ghost 未在 ad_positions 中启用')
+            ->assertExitCode(1);
+    }
 }

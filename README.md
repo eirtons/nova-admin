@@ -29,7 +29,8 @@ php artisan nova-admin:install
 填充示例广告、发布静态资源、建 storage 软链。无需手动碰 `AdminPanelProvider.php`。
 
 附带处理：公开文件（`robots.txt`/`ads.txt`/`vendor/livewire`）加入 `.gitignore`，
-`App\Models\User` 自动接入 `FilamentUser`（防生产 403）。自定义才需发布 `config/nova-admin.php`。
+`App\Models\User` 自动接入 `FilamentUser` + `HasNovaAdminAccess`（仅 `users.is_admin` 为真的用户可进后台，
+默认管理员已标记；User 已有 `canAccessPanel` 的不动），并生成差异版 `config/nova-admin.php`。
 
 ### 3. 启动验证
 
@@ -89,7 +90,8 @@ php artisan serve
 
 `enabled=false` 时只输出 global_head（统计、站点验证这类站点级脚本任何页面都要加载）。
 `ad_disabled_views` 里的视图（默认 `pages.show`、`errors::404`）会被注入 `$section->ads_enabled = false`。
-`nova-admin:doctor` 扫描模板：内容位只放了一半直接失败；完全没放的默认警告，`--strict` 时失败。
+`nova-admin:doctor` 扫描模板：内容位只放了一半、动态 `:position`、引用未启用的位直接失败；
+内容位完全没放默认警告，`--strict` 时失败。项目测试里断言 `nova-admin:doctor` 退出码为 0 即可守住模板契约。
 
 前台只读页面挂 `nova.public` 中间件组（不启会话、无 Cookie、带 `Cache-Control`，可进 CDN 边缘缓存），
 缓存时长见 `nova-admin.page_cache`。包同时全局下发 HSTS（仅 HTTPS 请求，`nova-admin.security.hsts` 可关）。
@@ -297,7 +299,7 @@ php artisan nova-admin:install --force
 php artisan optimize:clear && php artisan optimize
 ```
 
-`nova-admin:install` 会自动处理 `FilamentUser` 接入（避免后台 403）、发布
+`nova-admin:install` 会自动处理 `FilamentUser` / `HasNovaAdminAccess` 接入（避免后台 403）、发布
 Filament / Livewire 静态资源、`storage:link` 与公开文件忽略。
 
 生产服务器需确保 `storage/`、`public/vendor/livewire` 归属 web 用户。若启用了
