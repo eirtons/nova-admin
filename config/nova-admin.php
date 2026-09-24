@@ -43,7 +43,8 @@ return [
     |--------------------------------------------------------------------------
     | 每个 position 对应一条 AdSpot 记录（position 唯一）。
     |
-    | ⚠️ 只可追加，不可删行。详见下方 ads_protocol 的说明。
+    | 宿主 config/nova-admin.php 只写差异：追加专属位直接加一行；
+    | 去掉包内某个位写 'interstitial' => false，并同步去掉 position_map 里对应的键。
     */
     'ad_positions' => [
         'global_head'    => '全局 Head',
@@ -67,9 +68,8 @@ return [
     | 未在此列出的协议键一律判为未知键并整体失败；映射目标也必须在 ad_positions 里，
     | 否则写进去 AdService 也不会输出。
     |
-    | ⚠️ 两个列表都只可追加、不可删行。没填代码的位不产生任何 DOM，删了没收益，
-    | 只会让平台勾到时整体失败；整块删 ads_protocol 更隐蔽——浅合并会让它悄悄
-    | 回落成包默认值。改完跑 `php artisan nova-admin:doctor` 自检。
+    | 没填代码的位不产生任何 DOM，保留不用的位没有代价；去掉一个位反而会让
+    | 平台勾到它时整体导入失败。改完跑 `php artisan nova-admin:doctor` 自检。
     */
     'ads_protocol' => [
         'version'         => 1,
@@ -84,6 +84,31 @@ return [
             'interstitial'     => 'interstitial',
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | 布局级广告位
+    |--------------------------------------------------------------------------
+    | 浮层 / 脚本类的位，位置与页面结构无关，由布局里的
+    | <x-ad-layout-head /> 与 <x-ad-layout-body /> 统一输出（body 不套居中容器），
+    | 包新增此类位后，项目升级、后台填码即可展示，不用改模板。
+    | global_head 不在此列：组件固定把它放在最后输出，且不受 enabled 开关影响。
+    | 其余位是内容位，由各页面模板自行放置，doctor 会扫描模板检查渲染点。
+    */
+    'ad_layout_positions' => [
+        'anchor'       => true,
+        'interstitial' => true,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | 不投广告的视图
+    |--------------------------------------------------------------------------
+    | 向这些视图注入 $section->ads_enabled = false，布局据此关掉浮层位与内容位，
+    | global_head 不受影响。法务页与错误页投放踩 AdSense 政策线，收益也约等于零。
+    | 错误页走 errors:: 命名空间（Laravel 的 renderHttpException 如此解析）。
+    */
+    'ad_disabled_views' => ['pages.show', 'errors::404'],
 
     /*
     |--------------------------------------------------------------------------
@@ -111,6 +136,18 @@ return [
         'default_template' => null,   // null = 内置模板
         // 落 public/robots.txt 静态文件，Sitemap 行按 APP_URL 生成写入（单域名/每站独立部署）。
         // /robots.txt 路由仅作兜底：静态文件丢失或写失败时降级动态输出。
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | HSTS
+    |--------------------------------------------------------------------------
+    | 仅在 HTTPS 请求上下发 Strict-Transport-Security（明文响应浏览器会忽略），
+    | 本地 http 开发不受影响。不带 includeSubDomains——子域未必都上了 HTTPS。
+    */
+    'security' => [
+        'hsts'         => env('NOVA_HSTS', true),
+        'hsts_max_age' => 31536000,
     ],
 
     /*
@@ -159,25 +196,12 @@ return [
     |
     | frontend：包直接注册前台路由 GET /{slug}（仅限 presets 里的 slug），
     | static_pages 表即唯一数据源，后台保存前台立即生效，无需项目自建 pages 表。
-    | nova-admin:install 会在新项目 .env 写入 NOVA_STATIC_FRONTEND=true 自动启用；
-    | 已有自建静态页路由的老项目不受影响（无该 env 时默认关闭）。
     | view 可换成项目自己的 Blade（多主题项目指向主题 page 模板），
     | 模板契约：$page->title / $page->body_html（已剥标题 H1）/ $page->meta_description。
-    */
-    /*
-    |--------------------------------------------------------------------------
-    | 包自己注册的前台响应缓存时长（秒）
-    |--------------------------------------------------------------------------
     |
-    | 宿主若有 config/page-cache.php（做过前台缓存改造）以宿主的为准，
-    | 这里只是老项目的回退默认值。
-    |
+    | footer_views：向这些视图注入 $footerPages（已启用的静态页，按 presets 顺序），
+    | 页脚法务链接不要硬编码 slug，否则后台停用某页后会指向 404。
     */
-    'page_cache' => [
-        'ttl' => (int) env('PAGE_CACHE_TTL', 3600),
-        'cdn_ttl' => (int) env('PAGE_CACHE_CDN_TTL', 86400),
-    ],
-
     'static_pages' => [
         'enabled' => true,
         'site_description' => env('NOVA_SITE_DESCRIPTION', 'an online service'),
@@ -196,10 +220,25 @@ return [
             // 若把 view 换成了含 @csrf 表单的模板，置 false 退回 web 组。
             'cacheable' => env('NOVA_STATIC_FRONTEND_CACHEABLE', true),
 
-            'enabled'    => env('NOVA_STATIC_FRONTEND', false),
+            'enabled'    => env('NOVA_STATIC_FRONTEND', true),
             'view'       => 'nova-admin::static-page',
             'route_name' => 'pages.show',
         ],
+        'footer_views' => ['layouts.app'],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | 前台页面缓存时长（秒）
+    |--------------------------------------------------------------------------
+    | 挂了 CacheablePage（nova.public 中间件组、包自己的前台路由）的响应使用。
+    | 浏览器用 max-age，CDN 用 s-maxage；ttl 设为 0 整体关闭。
+    | 浏览器那份清不掉（副本在访客机器上）所以给 1 小时；
+    | CDN 那份能用 webdeploy 的 cloudflare:purge 随时清，给满一天换命中率。
+    */
+    'page_cache' => [
+        'ttl'     => (int) env('PAGE_CACHE_TTL', 3600),
+        'cdn_ttl' => (int) env('PAGE_CACHE_CDN_TTL', 86400),
     ],
 
     /*
@@ -246,7 +285,15 @@ return [
     | install 时写入 site_configs；站点设置页未保存过的字段也用它预填。
     */
     'site_defaults' => [
-        'contact_email' => env('NOVA_CONTACT_EMAIL', 'logan.luo@adsnova.cn'),
+        'site_name'           => env('NOVA_SITE_NAME', env('APP_NAME', 'Laravel')),
+        'subtitle'            => env('NOVA_SITE_SUBTITLE', 'A useful website for visitors'),
+        'copyright'           => env('NOVA_SITE_COPYRIGHT', '© '.env('APP_NAME', 'Laravel')),
+        'contact_email'       => env('NOVA_CONTACT_EMAIL', 'logan.luo@adsnova.cn'),
+        'meta_title_template' => env('NOVA_META_TITLE_TEMPLATE', '{title} | {site_name}'),
+        'meta_description'    => env('NOVA_META_DESCRIPTION', 'Clear, useful information and tools for visitors.'),
+        'meta_keywords'       => env('NOVA_META_KEYWORDS', ''),
+        'favicon_path'        => null,
+        'logo_path'           => null,
     ],
 
     /*

@@ -7,13 +7,11 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * 把包自己注册的前台响应标记为可被浏览器与 CDN 缓存。
+ * 把前台页面标记为可被浏览器与 CDN 缓存。
  *
- * 这些路由刻意不挂 web 组：带 Cookie 的响应 Cloudflare 一律按 DYNAMIC 处理、
- * 每次回源，去掉会话后配合这里的 Cache-Control，边缘才能真正命中。
- *
- * TTL 优先跟随宿主的 config/page-cache.php（若项目做过前台缓存改造），
- * 没有该文件时用包内默认值，老项目不必新增配置也能生效。
+ * 用于包自己的前台路由与宿主的 nova.public 路由组。这些路由刻意不挂 web 组：
+ * 带 Cookie 的响应 Cloudflare 一律按 DYNAMIC 处理、每次回源，
+ * 去掉会话后配合这里的 Cache-Control，边缘才能真正命中。
  */
 class CacheablePage
 {
@@ -28,8 +26,8 @@ class CacheablePage
             return $response;
         }
 
-        $ttl = (int) config('page-cache.ttl', config('nova-admin.page_cache.ttl', 600));
-        $cdnTtl = (int) config('page-cache.cdn_ttl', config('nova-admin.page_cache.cdn_ttl', 86400));
+        $ttl = (int) config('nova-admin.page_cache.ttl');
+        $cdnTtl = (int) config('nova-admin.page_cache.cdn_ttl');
 
         // 只缓存正常的 GET/HEAD 成功响应；重定向与错误页不缓存
         if ($ttl <= 0 || ! $request->isMethodCacheable() || $response->getStatusCode() !== 200) {

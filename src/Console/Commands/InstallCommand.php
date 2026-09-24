@@ -23,11 +23,8 @@ class InstallCommand extends Command
             return self::FAILURE;
         }
 
-        // 配置（迁移由包直接加载，无需发布到项目）
-        // mergeConfigFrom 已加载包默认值，宿主项目仅在需要自定义时才发布配置
-        if (! file_exists(config_path('nova-admin.php'))) {
-            $this->info('未发布 config/nova-admin.php，使用包默认配置。如需自定义请运行：php artisan vendor:publish --tag=nova-admin-config');
-        }
+        // 宿主只写差异配置（迁移由包直接加载，无需发布到项目）
+        $this->writeConfigStub();
 
         // 将插件接到 Filament Panel 配置链尾，确保覆盖 Filament 默认登录页
         if (! $this->registerPanelPlugin()) {
@@ -58,9 +55,6 @@ class InstallCommand extends Command
 
         // 把默认时区落到宿主 config/app.php 与 .env，默认 Asia/Shanghai
         $this->ensureTimezoneDefault();
-
-        // 新项目默认启用包内前台静态页路由（static_pages 表即唯一数据源）
-        $this->ensureStaticFrontendEnabled();
 
         // 忽略后台生成的公开文本文件，并取消跟踪 Laravel 默认 robots.txt
         $this->ignoreGeneratedPublicFiles();
@@ -290,27 +284,28 @@ PHP;
     }
 
     /**
-     * .env / .env.example 写入 NOVA_STATIC_FRONTEND=true：新项目开箱即得前台静态页。
-     * 已有该行（含注释掉的）则尊重宿主不动——自建静态页路由的老项目手动保持 false。
+     * 写入差异版 config/nova-admin.php：只含注释示例，完整默认值留在包里，
+     * 升级包时新增配置自动继承。已存在则不动。
      */
-    protected function ensureStaticFrontendEnabled(): void
+    protected function writeConfigStub(): void
     {
-        foreach (['.env', '.env.example'] as $file) {
-            $path = base_path($file);
+        $target = $this->configStubTarget();
 
-            if (! File::exists($path)) {
-                continue;
-            }
-
-            $contents = File::get($path);
-
-            if (preg_match('/^\s*#?\s*NOVA_STATIC_FRONTEND\s*=/m', $contents)) {
-                continue;
-            }
-
-            File::put($path, rtrim($contents).PHP_EOL.'NOVA_STATIC_FRONTEND=true'.PHP_EOL);
-            $this->info('已在 '.$file.' 写入 NOVA_STATIC_FRONTEND=true。');
+        if (is_file($target)) {
+            return;
         }
+
+        if (! is_dir(dirname($target))) {
+            mkdir(dirname($target), 0755, true);
+        }
+
+        copy(__DIR__.'/../../../resources/stubs/nova-admin.php', $target);
+        $this->info('已生成差异配置 config/nova-admin.php（只写与包默认不同的部分）。');
+    }
+
+    protected function configStubTarget(): string
+    {
+        return config_path('nova-admin.php');
     }
 
     protected function ignoreGeneratedPublicFiles(): void

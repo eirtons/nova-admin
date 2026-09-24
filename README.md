@@ -63,18 +63,46 @@ php artisan serve
 
 ## 三、前台使用
 
+广告位分两类：
+
+- **布局级位**（`ad_layout_positions`，默认 anchor / interstitial，外加 global_head）：浮层 / 脚本类，
+  位置与页面结构无关，布局里放一次聚合组件即可。包新增此类位后，项目升级、后台填码就能展示，不用改模板。
+- **内容位**（其余位，如 banner）：放在页面哪里由各站点决定，模板里手动成对放置。
+
 ```blade
-{{-- 放在 <head> 内，输出该广告位的 head_code --}}
-<x-ad-head position="global_head" />
+{{-- layouts/app.blade.php --}}
+<head>
+    @stack('ad-head')   {{-- 页面内容位的 head，必须在下面组件之前 --}}
+    <x-ad-layout-head :enabled="($section ?? null)?->ads_enabled ?? true" />  {{-- global_head 固定最后 --}}
+</head>
+<body>
+    @yield('content')
+    <x-ad-layout-body :enabled="($section ?? null)?->ads_enabled ?? true" />  {{-- 不套居中容器 --}}
+</body>
 
-{{-- 放在页面展示位置，输出 body_code；无生效广告时不产生 DOM --}}
+{{-- 页面模板里的内容位：head 与 body 必须成对，无生效广告时不产生 DOM --}}
+@push('ad-head')
+    <x-ad-head position="home_banner1" />
+@endpush
 <x-ad-body position="home_banner1" />
-
-{{-- 浮层类广告（anchor / interstitial 等）自己定位，不要套居中容器 --}}
-<x-ad-body position="anchor" :wrapper="false" />
 ```
 
-`<x-ad-head>` 与 `<x-ad-body>` 必须成对出现：只放 head 不放 body，后台填的 body 代码就永远不会渲染。
+`enabled=false` 时只输出 global_head（统计、站点验证这类站点级脚本任何页面都要加载）。
+`ad_disabled_views` 里的视图（默认 `pages.show`、`errors::404`）会被注入 `$section->ads_enabled = false`。
+`nova-admin:doctor` 扫描模板：内容位只放了一半直接失败；完全没放的默认警告，`--strict` 时失败。
+
+前台只读页面挂 `nova.public` 中间件组（不启会话、无 Cookie、带 `Cache-Control`，可进 CDN 边缘缓存），
+缓存时长见 `nova-admin.page_cache`。包同时全局下发 HSTS（仅 HTTPS 请求，`nova-admin.security.hsts` 可关）。
+
+```php
+// bootstrap/app.php
+->withRouting(
+    web: __DIR__.'/../routes/web.php',
+    then: fn () => Route::middleware('nova.public')->group(base_path('routes/public.php')),
+)
+```
+
+`static_pages.footer_views` 里的视图（默认 `layouts.app`）会拿到 `$footerPages`：已启用的静态页，按 presets 顺序排列。
 
 ```php
 site_config('site_name');        // 读站点配置
@@ -103,8 +131,7 @@ Meta Description 留空时自动取正文摘要。前台模板契约三件套：
 
 #### 前台路由：包内自带，新项目零代码
 
-`nova-admin:install` 会在 `.env` 写入 `NOVA_STATIC_FRONTEND=true`，包随即注册
-`GET /{slug}`（仅限 presets 内的 slug，不劫持其他 URL），路由名 `pages.show`，
+包默认注册 `GET /{slug}`（仅限 presets 内的 slug，不劫持其他 URL），路由名 `pages.show`，
 默认用包内简洁模板渲染，激活页面自动进 sitemap。**后台保存，前台立即生效。**
 
 有自己视觉的项目只换视图，路由和数据流不动：
@@ -113,7 +140,6 @@ Meta Description 留空时自动取正文摘要。前台模板契约三件套：
 // config/nova-admin.php
 'static_pages' => [
     'frontend' => [
-        'enabled'    => env('NOVA_STATIC_FRONTEND', false),
         'view'       => 'pages.show',   // 换成你的 Blade，收 $page 变量
         'route_name' => 'pages.show',
     ],
@@ -124,7 +150,7 @@ Meta Description 留空时自动取正文摘要。前台模板契约三件套：
 但**数据仍读 `static_page()`，不要建自己的表**：
 
 ```php
-// routes/web.php（NOVA_STATIC_FRONTEND 保持 false）
+// routes/web.php（NOVA_STATIC_FRONTEND=false 关闭包路由）
 Route::get('/{slug}', function (string $slug) {
     abort_unless($page = static_page($slug), 404);
 
@@ -174,7 +200,7 @@ php artisan nova-admin:create-admin [--force]   # 创建/重置默认管理员
 php artisan ad:seed [--off]                     # 填充测试广告（先清空）/ 禁用广告
 php artisan nova-admin:clear-sitemap-cache       # 清 sitemap 缓存
 php artisan ads:import-site-ad-config <file>    # 导入 webdeploy 下发的站点广告配置
-php artisan nova-admin:doctor                   # 自检配置一致性（广告位与协议映射）
+php artisan nova-admin:doctor [--strict]        # 自检广告位与协议映射、模板渲染点
 ```
 
 ### 站点广告配置下发协议（webdeploy）
@@ -205,34 +231,34 @@ __SITE_AD_CONFIG_RESULT_BEGIN__{"slots":{"status":"success","written_positions":
 
 任一部件 `failed` 时命令退出码为 1。协议键与本包 `position` 的对应关系在
 `config('nova-admin.ads_protocol.position_map')`：协议键带下划线（`home_banner_1`），
-本包 position 不带（`home_banner1`），站点只用部分广告位时删掉对应行即可。
+本包 position 不带（`home_banner1`）。站点确实不用某个位时，在 `ad_positions` 与 `position_map`
+里都写成 `false`；但保留不用的位没有代价，去掉反而会让平台勾到它时整体导入失败。
 
-前台模板注意 GPT 的顺序要求——slot 定义必须早于 `enableServices`，即 `global_head` 放最后。
-**每个投了 `<x-ad-head>` 的 position，都必须在同页输出对应的 `<x-ad-body>`**，否则后台
-填的 body 代码永远不会出现在页面上（这类漏配没有任何报错，只是广告不展示）：
-
-```blade
-{{-- <head> 内 --}}
-<x-ad-head position="anchor" />
-<x-ad-head position="interstitial" />
-<x-ad-head position="global_head" />
-
-{{-- <body> 开头，顺序与 head 一致；浮层广告自己定位，用 :wrapper="false" 去掉居中容器 --}}
-<x-ad-body position="anchor" :wrapper="false" />
-<x-ad-body position="interstitial" :wrapper="false" />
-<x-ad-body position="global_head" :wrapper="false" />
-```
+GPT 要求 slot 定义早于 `enableServices`，即 `global_head` 放最后——布局组件已保证这一点，
+页面的 `@stack('ad-head')` 写在 `<x-ad-layout-head />` 之前即可。
 
 ---
 
 ## 五、配置
 
-发布后编辑 `config/nova-admin.php`，常用项：
+`nova-admin:install` 生成差异版 `config/nova-admin.php`：**宿主只写与包默认不同的部分**，
+升级包后新增的广告位、协议映射等自动继承。合并规则：
+
+- 关联数组逐键合并：写一行就覆盖 / 追加一项；
+- 列表（如 `sitemap.urls`、`favicon.accepted_types`）整体替换；
+- 空数组等于没写；
+- 写 `false` 删除包内的键（如 `'interstitial' => false`）；包里本身是布尔值的键，`false` 就是普通的关闭。
+
+完整配置项见包内 `config/nova-admin.php`（`vendor:publish --tag=nova-admin-config` 可导出查看）。常用项：
 
 ```php
 'panel'        => ['id' => 'admin'],
 'ad_positions' => [ /* 自定义广告位枚举 */ ],
 'ads_protocol' => ['version' => 1, 'position_map' => [ /* 协议键 => position */ ]],
+'ad_layout_positions' => ['anchor' => true, 'interstitial' => true],  // 布局级位
+'ad_disabled_views'   => ['pages.show', 'errors::404'],             // 不投广告的视图
+'page_cache'   => ['ttl' => 3600, 'cdn_ttl' => 86400],
+'security'     => ['hsts' => true],
 'navigation'   => [
     'groups' => ['settings' => '基础设置', 'content' => '内容管理', 'system' => '系统'],
     'sort' => 90,

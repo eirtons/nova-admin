@@ -158,4 +158,40 @@ PHP);
         $this->assertTrue($command->seedNovaAdminDataForTest());
         $this->assertTrue($command->seeder->receivedForce);
     }
+
+    public function test_it_writes_the_diff_config_stub_once(): void
+    {
+        $target = sys_get_temp_dir().'/nova-admin-stub-'.uniqid().'/nova-admin.php';
+
+        $command = new class($target) extends InstallCommand
+        {
+            public function __construct(public string $target)
+            {
+                parent::__construct();
+            }
+
+            public function info($string, $verbosity = null) {}
+
+            protected function configStubTarget(): string
+            {
+                return $this->target;
+            }
+
+            public function writeConfigStubForTest(): void
+            {
+                $this->writeConfigStub();
+            }
+        };
+
+        $command->writeConfigStubForTest();
+        $stub = require $target;
+        $this->assertSame([], $stub['ad_positions']);
+
+        file_put_contents($target, '<?php return [\'locale\' => \'en\'];');
+        $command->writeConfigStubForTest();
+        $this->assertSame(['locale' => 'en'], require $target);
+
+        @unlink($target);
+        @rmdir(dirname($target));
+    }
 }

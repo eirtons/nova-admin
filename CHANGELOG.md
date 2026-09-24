@@ -6,6 +6,25 @@
 
 ## [未发布]
 
+## [2.0.0] - 2026-09-23
+本版起 nova-admin 是底层核心库，`nova-laravel-starter` 只保留前台薄骨架；可复用逻辑全部收进包，改包发版、项目升级即得。
+
+### 变更（不兼容）
+- **配置改为差异合并**：宿主 `config/nova-admin.php` 只写与包默认不同的部分，包新增的广告位、协议映射等升级后自动继承。
+  关联数组递归合并；列表整体替换；空数组等于没写；写 `false` 删除包内的键（包里是布尔值的键除外）。配置已缓存时不再合并。
+- `nova-admin:install` 生成差异版 `config/nova-admin.php`（仅注释示例），不再写入 `NOVA_STATIC_FRONTEND`。
+- `static_pages.frontend.enabled` 默认改为 `true`。
+- `CacheablePage` 只读 `nova-admin.page_cache`，不再读宿主 `config/page-cache.php`。
+
+### 新增
+- 布局级广告位 `ad_layout_positions` 与组件 `<x-ad-layout-head />`、`<x-ad-layout-body />`：输出全部布局级位，global_head 固定最后，body 不套容器；`:enabled="false"` 时只输出 global_head。
+- `ad_disabled_views`：向法务页、404 等视图注入 `$section->ads_enabled = false`。
+- `static_pages.footer_views`：向布局注入 `$footerPages`（已启用静态页，按 presets 排序）。
+- 中间件组 `nova.public`（SubstituteBindings + CacheablePage），供宿主前台只读路由使用；全局共享空 `$errors`，无会话路由引用不再 500。
+- 全局 HSTS 中间件 `SecurityHeaders`（仅 HTTPS，`nova-admin.security.hsts` 可关）。
+- 迁移：`users.is_admin`（已存在则跳过）。
+- `nova-admin:doctor` 扫描模板渲染点：内容位只放一半即失败，完全没放默认警告，`--strict` 时失败。
+
 ## [1.6.2] - 2026-09-20
 ### 修复
 - `CacheablePage` 在 `local` / `testing` 环境不再下发 `Cache-Control`。`max-age` 那份副本存在浏览器里、清不掉，

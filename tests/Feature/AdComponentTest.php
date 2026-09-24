@@ -182,4 +182,62 @@ class AdComponentTest extends TestCase
 
         $this->assertSame('<div>new</div>', app(AdService::class)->body('home_banner1'));
     }
+
+    protected function fakeAds(): void
+    {
+        $this->app->instance(AdService::class, new class extends AdService
+        {
+            public function head(string $position): string
+            {
+                return '<script data-position="'.$position.'"></script>';
+            }
+
+            public function body(string $position): string
+            {
+                return '<ins data-position="'.$position.'"></ins>';
+            }
+        });
+    }
+
+    public function test_layout_head_renders_layout_positions_then_global_head_last(): void
+    {
+        $this->fakeAds();
+        config(['nova-admin.ad_layout_positions' => ['anchor' => true, 'side_rail' => true, 'interstitial' => false]]);
+
+        $html = Blade::render('<x-ad-layout-head />');
+
+        $this->assertStringContainsString('data-position="anchor"', $html);
+        $this->assertStringContainsString('data-position="side_rail"', $html);
+        $this->assertStringNotContainsString('data-position="interstitial"', $html);
+        $this->assertStringEndsWith('<script data-position="global_head"></script>', trim($html));
+    }
+
+    public function test_disabled_layout_ads_keep_only_global_head(): void
+    {
+        $this->fakeAds();
+
+        $html = trim(Blade::render('<x-ad-layout-head :enabled="false" />'));
+
+        $this->assertSame('<script data-position="global_head"></script>', $html);
+    }
+
+    public function test_layout_body_is_never_wrapped(): void
+    {
+        $this->fakeAds();
+
+        $html = Blade::render('<x-ad-layout-body />');
+
+        $this->assertStringContainsString('<ins data-position="anchor"></ins>', $html);
+        $this->assertStringContainsString('<ins data-position="interstitial"></ins>', $html);
+        $this->assertStringNotContainsString('text-align: center', $html);
+        $this->assertStringEndsWith('<ins data-position="global_head"></ins>', trim($html));
+    }
+
+    public function test_content_positions_exclude_layout_positions_and_global_head(): void
+    {
+        $this->assertSame(
+            ['home_banner1', 'home_banner2', 'detail_banner1', 'detail_banner2'],
+            AdService::contentPositions(),
+        );
+    }
 }

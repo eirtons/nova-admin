@@ -25,6 +25,35 @@ class AdService
         return $this->code($position, 'head_code');
     }
 
+    public static function globalHeadPosition(): string
+    {
+        return (string) config('nova-admin.ads_protocol.global_head_key', 'global_head');
+    }
+
+    /** 布局级位（值为真的 ad_layout_positions），不含 global_head。 */
+    public static function layoutPositions(): array
+    {
+        return array_values(array_diff(
+            array_keys(array_filter((array) config('nova-admin.ad_layout_positions', []))),
+            [static::globalHeadPosition()],
+        ));
+    }
+
+    /** 布局组件的输出顺序：global_head 必须最后，enabled=false 时只剩它。 */
+    public static function layoutRenderOrder(bool $enabled): array
+    {
+        return [...($enabled ? static::layoutPositions() : []), static::globalHeadPosition()];
+    }
+
+    /** 内容位：由页面模板自行放置渲染点的位。 */
+    public static function contentPositions(): array
+    {
+        return array_values(array_diff(
+            array_keys((array) config('nova-admin.ad_positions', [])),
+            [...static::layoutPositions(), static::globalHeadPosition()],
+        ));
+    }
+
     protected function code(string $position, string $column): string
     {
         if (! array_key_exists($position, (array) config('nova-admin.ad_positions', []))) {
