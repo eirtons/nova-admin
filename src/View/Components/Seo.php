@@ -9,8 +9,9 @@ use Illuminate\View\View;
  * 前台 <head> 的 SEO 与站点标识，数据来自后台「站点设置」：
  * <title>（按 meta_title_template 拼装）、description、keywords、canonical、favicon、OG / Twitter 卡片。
  *
- * 布局里放 <x-nova-seo /> 即可；页面用 @section('title' | 'description' | 'canonical' | 'og_image')
- * 覆盖，也可直接传同名属性。title 只写页面自身标题，站点名由模板拼上。
+ * 布局里放 <x-nova-seo /> 即可；页面用 @section('title' | 'description' | 'keywords' | 'canonical' | 'robots'
+ * | 'og_type' | 'og_image') 覆盖，也可直接传同名属性（og_type 对应 og-type）。
+ * title 只写页面自身标题，站点名由模板拼上。
  */
 class Seo extends Component
 {
@@ -24,6 +25,10 @@ class Seo extends Component
 
     public string $canonical;
 
+    public ?string $robots;
+
+    public string $ogType;
+
     public ?string $image;
 
     public ?string $favicon;
@@ -33,6 +38,9 @@ class Seo extends Component
         ?string $description = null,
         ?string $canonical = null,
         ?string $image = null,
+        ?string $keywords = null,
+        ?string $robots = null,
+        ?string $ogType = null,
     ) {
         $this->siteName = (string) site_setting('site_name');
 
@@ -46,8 +54,10 @@ class Seo extends Component
             ]);
 
         $this->description = $description ?? $this->section('description') ?? (site_setting('meta_description') ?: null);
-        $this->keywords = site_setting('meta_keywords') ?: null;
+        $this->keywords = $keywords ?? $this->section('keywords') ?? (site_setting('meta_keywords') ?: null);
         $this->canonical = $canonical ?? $this->section('canonical') ?? url()->current();
+        $this->robots = $robots ?? $this->section('robots');
+        $this->ogType = $ogType ?? $this->section('og_type') ?? 'website';
         $this->image = $image ?? $this->section('og_image');
         $this->favicon = site_media_url('favicon_path');
     }

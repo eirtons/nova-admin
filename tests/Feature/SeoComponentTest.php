@@ -62,6 +62,42 @@ class SeoComponentTest extends TestCase
         $this->assertStringContainsString('<meta name="twitter:card" content="summary_large_image">', $html);
     }
 
+    public function test_page_sections_override_keywords_robots_and_og_type(): void
+    {
+        app(SiteConfigService::class)->set('meta_keywords', 'site, wide');
+
+        $html = Blade::render(
+            "@section('title', 'Snake')\n@section('keywords', 'snake, arcade')\n"
+            ."@section('robots', 'noindex, follow')\n@section('og_type', 'article')\n"
+            ."@section('og_image', 'https://x.test/snake.png')\n<x-nova-seo />"
+        );
+
+        $this->assertStringContainsString('<meta name="keywords" content="snake, arcade">', $html);
+        $this->assertStringContainsString('<meta name="robots" content="noindex, follow">', $html);
+        $this->assertStringContainsString('<meta property="og:type" content="article">', $html);
+        $this->assertStringContainsString('<meta name="twitter:title" content="Snake | Acme">', $html);
+        $this->assertStringContainsString('<meta name="twitter:description" content="Default description">', $html);
+        $this->assertStringContainsString('<meta name="twitter:image" content="https://x.test/snake.png">', $html);
+    }
+
+    public function test_attributes_override_keywords_robots_and_og_type(): void
+    {
+        $html = Blade::render('<x-nova-seo keywords="k1" robots="noindex" og-type="article" />');
+
+        $this->assertStringContainsString('<meta name="keywords" content="k1">', $html);
+        $this->assertStringContainsString('<meta name="robots" content="noindex">', $html);
+        $this->assertStringContainsString('<meta property="og:type" content="article">', $html);
+    }
+
+    public function test_optional_tags_are_omitted_without_values(): void
+    {
+        $html = Blade::render('<x-nova-seo />');
+
+        $this->assertStringNotContainsString('name="robots"', $html);
+        $this->assertStringNotContainsString('twitter:image', $html);
+        $this->assertStringContainsString('<meta property="og:type" content="website">', $html);
+    }
+
     public function test_site_setting_helper_falls_back_to_defaults(): void
     {
         $this->assertSame('Acme', site_setting('site_name'));

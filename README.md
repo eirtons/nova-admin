@@ -127,7 +127,9 @@ zone 按域名自动查（只有 token 没有 Zone.Read 权限时才需要配 `C
 
 布局 `<head>` 里放 `<x-nova-seo />`，按后台「站点设置」输出 `<title>`（按 `meta_title_template` 拼装，
 支持 `{title}`、`{site_name}`、`%s`）、description、keywords、canonical、favicon、OG / Twitter 卡片。
-页面用 `@section('title', 'About')` 只写自身标题；`description`、`canonical`、`og_image` 同理可用 section 或同名属性覆盖。
+页面用 `@section('title', 'About')` 只写自身标题；`description`、`keywords`、`canonical`、`robots`、`og_type`、`og_image`
+同理可用 section 或同名属性覆盖（属性写 `og-type`、`image`）。`robots` 有值才输出；`og_type` 默认 `website`；
+`keywords` 未覆盖时取站点设置。
 未写 title 的页面（通常是首页）取「站点名 - 副标题」。
 
 ```php

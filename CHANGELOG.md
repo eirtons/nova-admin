@@ -6,6 +6,12 @@
 
 ## [未发布]
 
+## [2.4.0] - 2026-10-07
+### 新增
+- `<x-nova-seo />` 支持页面级 `@section('keywords' | 'robots' | 'og_type')`（及同名属性 `keywords` / `robots` / `og-type`）：
+  keywords 覆盖站点设置，robots 有值才输出，og:type 默认 `website`。
+- `<x-nova-seo />` 补齐 `twitter:title`、`twitter:description`、`twitter:image`。
+
 ## [2.3.0] - 2026-10-07
 ### 新增
 - 后台改广告位、站点设置、静态页、ads.txt / robots.txt 后自动清本站 Cloudflare 边缘缓存（只清 `APP_URL` 的 host，
