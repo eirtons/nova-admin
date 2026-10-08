@@ -33,6 +33,20 @@ class StaticPageTest extends TestCase
         $this->assertStringContainsString('<h1>About Our Site</h1>', $page->content);
     }
 
+    public function test_title_and_derived_meta_description_are_plain_text(): void
+    {
+        $page = StaticPage::create([
+            'slug' => 'faq',
+            'title' => 'FAQ',
+            'content' => '<h1>Staff &amp; Tempo FAQ</h1><p>Tom &amp; Jerry&#039;s tools.</p>',
+            'is_active' => true,
+        ]);
+
+        // 存纯文本，Blade 输出时只转义一次；存实体会在页面上显示成 &amp;
+        $this->assertSame('Staff & Tempo FAQ', $page->title);
+        $this->assertSame("Tom & Jerry's tools.", $page->meta_description);
+    }
+
     public function test_content_without_h1_keeps_given_title(): void
     {
         $page = StaticPage::create([

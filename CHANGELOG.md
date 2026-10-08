@@ -6,6 +6,11 @@
 
 ## [未发布]
 
+## [2.4.1] - 2026-10-08
+### 修复
+- 静态页从正文 H1 取的标题、自动生成的 meta description 未解码 HTML 实体，含 `&`、`'` 的页面在前台显示成
+  `&amp;amp;`、`&amp;#039;`。现在存纯文本，由 Blade 输出时统一转义。
+
 ## [2.4.0] - 2026-10-07
 ### 新增
 - `<x-nova-seo />` 支持页面级 `@section('keywords' | 'robots' | 'og_type')`（及同名属性 `keywords` / `robots` / `og-type`）：

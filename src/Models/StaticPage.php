@@ -36,8 +36,9 @@ class StaticPage extends Model implements HasRichContent
             }
 
             if (blank($page->meta_description)) {
+                // 去标签后解码实体：存纯文本，输出时由 Blade 统一转义一次，否则 & 会变成 &amp;amp;
                 $page->meta_description = Str::limit(
-                    trim((string) preg_replace('/\s+/', ' ', strip_tags($page->body_html))),
+                    trim((string) preg_replace('/\s+/', ' ', static::plainText($page->body_html))),
                     155,
                     '',
                 ) ?: null;
@@ -62,10 +63,16 @@ class StaticPage extends Model implements HasRichContent
     protected static function leadingH1Text(string $content): string
     {
         if (preg_match('/^\s*<h1[^>]*>(.*?)<\/h1>/is', $content, $m)) {
-            return trim(strip_tags($m[1]));
+            return trim(static::plainText($m[1]));
         }
 
         return '';
+    }
+
+    /** HTML 片段转纯文本（去标签 + 解码实体）。 */
+    protected static function plainText(string $html): string
+    {
+        return html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 
     protected function setUpRichContent(): void
