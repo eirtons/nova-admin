@@ -6,6 +6,7 @@ use Filament\Forms\Components\RichEditor\Models\Concerns\InteractsWithRichConten
 use Filament\Forms\Components\RichEditor\Models\Contracts\HasRichContent;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Inova\NovaAdmin\Services\EdgeCacheService;
 
 class StaticPage extends Model implements HasRichContent
 {
@@ -42,6 +43,10 @@ class StaticPage extends Model implements HasRichContent
                 ) ?: null;
             }
         });
+
+        // 页脚的静态页链接与静态页本身都在前台整页缓存里
+        static::saved(fn () => app(EdgeCacheService::class)->purgeLater('static_pages'));
+        static::deleted(fn () => app(EdgeCacheService::class)->purgeLater('static_pages'));
     }
 
     /**

@@ -6,6 +6,15 @@
 
 ## [未发布]
 
+## [2.3.0] - 2026-10-07
+### 新增
+- 后台改广告位、站点设置、静态页、ads.txt / robots.txt 后自动清本站 Cloudflare 边缘缓存（只清 `APP_URL` 的 host，
+  请求 / 命令 / 队列任务结束时合并清一次）。此前要等 `s-maxage` 过期或到 webdeploy 手动 `cloudflare:purge`。
+- helper `purge_edge_cache($reason, now: false)` 与命令 `nova-admin:purge-edge-cache`，供项目自己的批量改动
+  （切换领域、删内容、换主题）调用。
+- 配置 `nova-admin.cloudflare`：`CLOUDFLARE_API_TOKEN`（需 Zone.Read + Zone.Cache Purge），
+  `CLOUDFLARE_ZONE_ID` 留空时按域名自动查。未配置 token 或 local / testing 环境不清。
+
 ## [2.2.0] - 2026-09-23
 ### 新增
 - `<x-nova-seo />`：按后台「站点设置」输出 title（`meta_title_template`，支持 `{title}` / `{site_name}` / `%s`）、

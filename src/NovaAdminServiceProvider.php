@@ -8,6 +8,7 @@ use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -20,8 +21,10 @@ use Inova\NovaAdmin\Console\Commands\CreateAdminCommand;
 use Inova\NovaAdmin\Console\Commands\DoctorCommand;
 use Inova\NovaAdmin\Console\Commands\ImportSiteAdConfigCommand;
 use Inova\NovaAdmin\Console\Commands\InstallCommand;
+use Inova\NovaAdmin\Console\Commands\PurgeEdgeCacheCommand;
 use Inova\NovaAdmin\Console\Commands\SeedAdSpotsCommand;
 use Inova\NovaAdmin\Services\AdService;
+use Inova\NovaAdmin\Services\EdgeCacheService;
 use Inova\NovaAdmin\Services\PublicTextFileService;
 use Inova\NovaAdmin\Services\SiteConfigService;
 use Inova\NovaAdmin\Services\SitemapService;
@@ -43,6 +46,7 @@ class NovaAdminServiceProvider extends ServiceProvider
         $this->app->singleton(AdService::class);
         $this->app->singleton(PublicTextFileService::class);
         $this->app->singleton(SitemapService::class);
+        $this->app->singleton(EdgeCacheService::class);
     }
 
     /**
@@ -124,6 +128,7 @@ class NovaAdminServiceProvider extends ServiceProvider
 
         $this->trustProxies();
         $this->registerMiddleware();
+        $this->flushEdgeCacheWhenDone();
         $this->registerViewComposers();
 
         $this->registerRoutes();
@@ -136,6 +141,7 @@ class NovaAdminServiceProvider extends ServiceProvider
                 SeedAdSpotsCommand::class,
                 ImportSiteAdConfigCommand::class,
                 ClearCacheCommand::class,
+                PurgeEdgeCacheCommand::class,
                 DoctorCommand::class,
             ]);
 
@@ -172,6 +178,19 @@ class NovaAdminServiceProvider extends ServiceProvider
         ]);
 
         $this->app->make(HttpKernel::class)->pushMiddleware(SecurityHeaders::class);
+    }
+
+    /**
+     * purgeLater() 登记的待清在请求 / 命令结束、或每个队列任务结束时合并执行。
+     * 队列 worker 是常驻进程，不会走 terminating，只挂 terminating 会让任务里的改动永远清不掉。
+     */
+    protected function flushEdgeCacheWhenDone(): void
+    {
+        $flush = fn () => $this->app->make(EdgeCacheService::class)->flushPending();
+
+        $this->app->terminating($flush);
+        Queue::after($flush);
+        Queue::failing($flush);
     }
 
     protected function registerViewComposers(): void

@@ -234,11 +234,25 @@ return [
     | 挂了 CacheablePage（nova.public 中间件组、包自己的前台路由）的响应使用。
     | 浏览器用 max-age，CDN 用 s-maxage；ttl 设为 0 整体关闭。
     | 浏览器那份清不掉（副本在访客机器上）所以给 1 小时；
-    | CDN 那份能用 webdeploy 的 cloudflare:purge 随时清，给满一天换命中率。
+    | CDN 那份后台改动后会自动清（见下方 cloudflare），给满一天换命中率。
     */
     'page_cache' => [
         'ttl'     => (int) env('PAGE_CACHE_TTL', 3600),
         'cdn_ttl' => (int) env('PAGE_CACHE_CDN_TTL', 86400),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cloudflare 边缘缓存清理
+    |--------------------------------------------------------------------------
+    | 后台改广告位、站点设置、静态页、ads.txt / robots.txt 后自动清本站（APP_URL 的 host）缓存；
+    | 项目自己的批量改动用 purge_edge_cache() 或 nova-admin:purge-edge-cache。
+    | Token 由 webdeploy 部署时写入 .env，本包是公开仓库，不内置默认值。
+    | Token 需要 Zone.Read（zone_id 留空时按域名自动查）+ Zone.Cache Purge 权限。
+    */
+    'cloudflare' => [
+        'api_token' => env('CLOUDFLARE_API_TOKEN', ''),
+        'zone_id'   => env('CLOUDFLARE_ZONE_ID', ''),
     ],
 
     /*

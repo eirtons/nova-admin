@@ -4,6 +4,7 @@ namespace Inova\NovaAdmin\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Inova\NovaAdmin\Services\AdService;
+use Inova\NovaAdmin\Services\EdgeCacheService;
 
 class AdSpot extends Model
 {
@@ -23,8 +24,8 @@ class AdSpot extends Model
     protected static function booted(): void
     {
         // AdService 在请求内缓存全部启用广告位；后台一保存就得让缓存失效。
-        static::saved(fn () => app(AdService::class)->flush());
-        static::deleted(fn () => app(AdService::class)->flush());
+        static::saved(fn () => static::flushCaches());
+        static::deleted(fn () => static::flushCaches());
     }
 
     /**
@@ -63,10 +64,17 @@ class AdSpot extends Model
     {
         $affected = static::query()->update(['is_active' => false]);
 
-        // 批量更新不触发模型事件，得手动让请求内缓存失效
-        app(AdService::class)->flush();
+        // 批量更新不触发模型事件，得手动让缓存失效
+        static::flushCaches();
 
         return $affected;
+    }
+
+    /** 广告代码直出在 HTML 里，边缘副本不清就一直是旧广告。 */
+    protected static function flushCaches(): void
+    {
+        app(AdService::class)->flush();
+        app(EdgeCacheService::class)->purgeLater('ad_spots');
     }
 
     private static function testHeadScript(): string

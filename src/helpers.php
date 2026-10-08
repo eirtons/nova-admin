@@ -2,6 +2,7 @@
 
 use Inova\NovaAdmin\Models\StaticPage;
 use Inova\NovaAdmin\Services\AdService;
+use Inova\NovaAdmin\Services\EdgeCacheService;
 use Inova\NovaAdmin\Services\SiteConfigService;
 
 if (! function_exists('site_config')) {
@@ -56,5 +57,24 @@ if (! function_exists('static_page')) {
             ->where('slug', $slug)
             ->where('is_active', true)
             ->first();
+    }
+}
+
+if (! function_exists('purge_edge_cache')) {
+    /**
+     * 清本站 Cloudflare 边缘缓存。项目自己的批量改动（切换领域、删内容、换主题）完成后调用。
+     * 默认在请求 / 命令 / 队列任务结束时合并执行；$now 为真时立即执行并返回是否成功。
+     */
+    function purge_edge_cache(string $reason, bool $now = false): bool
+    {
+        $edgeCache = app(EdgeCacheService::class);
+
+        if ($now) {
+            return $edgeCache->purge($reason);
+        }
+
+        $edgeCache->purgeLater($reason);
+
+        return true;
     }
 }

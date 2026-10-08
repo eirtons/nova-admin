@@ -106,6 +106,23 @@ php artisan serve
 
 `static_pages.footer_views` 里的视图（默认 `layouts.app`）会拿到 `$footerPages`：已启用的静态页，按 presets 顺序排列。
 
+#### 清 Cloudflare 边缘缓存
+
+边缘副本最长留到当天结束。后台改了广告位、站点设置、静态页、ads.txt / robots.txt，
+包会在请求 / 命令 / 队列任务结束时自动清本站（`APP_URL` 的 host）缓存，同一次操作多次写入只清一次。
+
+**项目自己的批量改动必须自己调**，包感知不到：切换领域、清空或删除内容、切换主题、采集入库之后：
+
+```php
+purge_edge_cache('domain_switched');            // 当前请求 / 命令 / 队列任务结束时清
+purge_edge_cache('domain_switched', now: true); // 立即清，返回是否成功
+```
+
+不清的后果：旧首页链着已删除的内容，访客点进去是 404，而 404 本身也会被边缘缓存。
+
+需要 `.env` 里的 `CLOUDFLARE_API_TOKEN`（由 webdeploy 部署时写入；本包是公开仓库，不内置 token）；
+zone 按域名自动查（只有 token 没有 Zone.Read 权限时才需要配 `CLOUDFLARE_ZONE_ID`）。local / testing 环境不清。
+
 ### SEO 与站点设置
 
 布局 `<head>` 里放 `<x-nova-seo />`，按后台「站点设置」输出 `<title>`（按 `meta_title_template` 拼装，
@@ -215,6 +232,7 @@ php artisan ad:seed [--off]                     # 填充测试广告（先清空
 php artisan nova-admin:clear-sitemap-cache       # 清 sitemap 缓存
 php artisan ads:import-site-ad-config <file>    # 导入 webdeploy 下发的站点广告配置
 php artisan nova-admin:doctor [--strict]        # 自检广告位与协议映射、模板渲染点
+php artisan nova-admin:purge-edge-cache         # 立即清本站 Cloudflare 边缘缓存
 ```
 
 ### 站点广告配置下发协议（webdeploy）
@@ -272,6 +290,7 @@ GPT 要求 slot 定义早于 `enableServices`，即 `global_head` 放最后—�
 'ad_layout_positions' => ['anchor' => true, 'interstitial' => true],  // 布局级位
 'ad_disabled_views'   => ['pages.show', 'errors::404'],             // 不投广告的视图
 'page_cache'   => ['ttl' => 3600, 'cdn_ttl' => 86400],
+'cloudflare'   => ['api_token' => env('CLOUDFLARE_API_TOKEN'), 'zone_id' => env('CLOUDFLARE_ZONE_ID')],
 'security'     => ['hsts' => true],
 'navigation'   => [
     'groups' => ['settings' => '基础设置', 'content' => '内容管理', 'system' => '系统'],

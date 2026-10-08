@@ -53,6 +53,9 @@ class SiteConfigService
     {
         SiteConfig::query()->where('key', $key)->delete();
 
+        // 批量删除不触发模型事件
+        app(EdgeCacheService::class)->purgeLater('site_configs');
+
         unset($this->resolved[$key]);
     }
 
