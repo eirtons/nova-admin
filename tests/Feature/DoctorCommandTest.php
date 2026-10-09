@@ -63,7 +63,7 @@ class DoctorCommandTest extends TestCase
     public function test_complete_templates_pass_strict(): void
     {
         $tags = '';
-        foreach (['home_banner1', 'home_banner2', 'detail_banner1', 'detail_banner2'] as $position) {
+        foreach (['home_banner1', 'home_banner2', 'detail_banner1', 'detail_banner2', 'category_banner1', 'category_banner2'] as $position) {
             $tags .= "<x-ad-head position=\"{$position}\" />\n<x-ad-body position=\"{$position}\" />\n";
         }
         // 布局级位与 global_head 由布局组件输出，不要求出现在模板里

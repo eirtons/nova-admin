@@ -6,6 +6,12 @@
 
 ## [未发布]
 
+## [2.5.0] - 2026-10-08
+### 新增
+- 通用内容位 `category_banner1` / `category_banner2`（分类页 Banner 1 / 2），协议映射 `category_banner_1` / `category_banner_2`
+  与 webdeploy `AdUnitSlot` 对齐。此前只有资讯站自研的广告系统能接收这两个键，基于本包的站点勾选后会整单导入失败。
+  未放渲染点的项目只在 `nova-admin:doctor` 中警告（`--strict` 才失败），不影响现有站点。
+
 ## [2.4.2] - 2026-10-08
 ### 变更
 - 测试广告（后台「填充测试广告」/ `ad:seed`）按 webdeploy 默认尺寸生成：Banner 占位 300×250；

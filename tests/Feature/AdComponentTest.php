@@ -236,7 +236,7 @@ class AdComponentTest extends TestCase
     public function test_content_positions_exclude_layout_positions_and_global_head(): void
     {
         $this->assertSame(
-            ['home_banner1', 'home_banner2', 'detail_banner1', 'detail_banner2'],
+            ['home_banner1', 'home_banner2', 'detail_banner1', 'detail_banner2', 'category_banner1', 'category_banner2'],
             AdService::contentPositions(),
         );
     }
