@@ -40,6 +40,17 @@ class SeoComponentTest extends TestCase
         $this->assertStringNotContainsString('rel="icon"', $html);
     }
 
+    public function test_default_canonical_keeps_only_the_page_parameter(): void
+    {
+        $this->app->instance('request', \Illuminate\Http\Request::create('/list?page=3&utm_source=x'));
+
+        $this->assertStringContainsString('<link rel="canonical" href="http://localhost/list?page=3">', Blade::render('<x-nova-seo />'));
+
+        $this->app->instance('request', \Illuminate\Http\Request::create('/list?page=1&utm_source=x'));
+
+        $this->assertStringContainsString('<link rel="canonical" href="http://localhost/list">', Blade::render('<x-nova-seo />'));
+    }
+
     public function test_page_without_title_gets_site_name_and_subtitle(): void
     {
         $this->assertStringContainsString('<title>Acme - Tools for makers</title>', Blade::render('<x-nova-seo />'));

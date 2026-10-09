@@ -6,6 +6,11 @@
 
 ## [未发布]
 
+## [2.5.1] - 2026-10-08
+### 修复
+- `<x-nova-seo />` 默认 canonical 保留分页参数：`/?page=2` 此前被指回 `/`，等于把分页声明成首页副本，
+  分页里的内容链接不会被跟进。现在 `page > 1` 时 canonical 带 `?page=N`，其余查询参数（utm 等）仍去掉。
+
 ## [2.5.0] - 2026-10-08
 ### 新增
 - 通用内容位 `category_banner1` / `category_banner2`（分类页 Banner 1 / 2），协议映射 `category_banner_1` / `category_banner_2`

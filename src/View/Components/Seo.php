@@ -55,11 +55,22 @@ class Seo extends Component
 
         $this->description = $description ?? $this->section('description') ?? (site_setting('meta_description') ?: null);
         $this->keywords = $keywords ?? $this->section('keywords') ?? (site_setting('meta_keywords') ?: null);
-        $this->canonical = $canonical ?? $this->section('canonical') ?? url()->current();
+        $this->canonical = $canonical ?? $this->section('canonical') ?? $this->defaultCanonical();
         $this->robots = $robots ?? $this->section('robots');
         $this->ogType = $ogType ?? $this->section('og_type') ?? 'website';
         $this->image = $image ?? $this->section('og_image');
         $this->favicon = site_media_url('favicon_path');
+    }
+
+    /**
+     * 默认 canonical 为当前 URL 去掉查询串，但保留分页参数：url()->current() 会把 /?page=2 指回 /，
+     * 等于告诉搜索引擎第 2 页是首页副本，分页里的链接就不会被跟进。其余参数（utm 等）一律去掉。
+     */
+    protected function defaultCanonical(): string
+    {
+        $page = (int) request()->query('page');
+
+        return $page > 1 ? url()->current().'?page='.$page : url()->current();
     }
 
     /** 未指定标题的页面（通常是首页）：站点名 + 副标题。 */
