@@ -24,6 +24,7 @@ use Inova\NovaAdmin\Console\Commands\ImportSiteAdConfigCommand;
 use Inova\NovaAdmin\Console\Commands\InstallCommand;
 use Inova\NovaAdmin\Console\Commands\PurgeEdgeCacheCommand;
 use Inova\NovaAdmin\Console\Commands\SeedAdSpotsCommand;
+use Inova\NovaAdmin\Console\Commands\SiteOpsCommand;
 use Inova\NovaAdmin\Services\AdService;
 use Inova\NovaAdmin\Services\EdgeCacheService;
 use Inova\NovaAdmin\Services\PublicTextFileService;
@@ -145,6 +146,7 @@ class NovaAdminServiceProvider extends ServiceProvider
                 PurgeEdgeCacheCommand::class,
                 DoctorCommand::class,
                 ExportSitePresetsCommand::class,
+                SiteOpsCommand::class,
             ]);
 
             $this->ensureLivewireAssetsPublished();

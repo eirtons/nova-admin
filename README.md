@@ -236,6 +236,7 @@ php artisan ads:import-site-ad-config <file>    # 导入 webdeploy 下发的站�
 php artisan nova-admin:doctor [--strict]        # 自检广告位与协议映射、模板渲染点
 php artisan nova-admin:purge-edge-cache         # 立即清本站 Cloudflare 边缘缓存
 php artisan nova-admin:export-site-presets      # 生成 site-presets.json（建站预设下拉清单）
+php artisan nova-admin:site-ops <file>          # 执行 webdeploy 下发的站点配置（robots / ads.txt / 预设切换）
 ```
 
 ### 建站预设（webdeploy 发起建站时预选领域 / 主题）
@@ -254,6 +255,14 @@ php artisan nova-admin:export-site-presets      # 生成 site-presets.json（建
 
 webdeploy 每天拉取各项目 master 上的 `site-presets.json` 渲染下拉；建站时把选中值作为 `WEBDEPLOY_PRESET_<KEY>`
 传给部署脚本，脚本写进 `.env` 的 `NOVA_PRESET_<KEY>`。值不在清单内时 `site_preset()` 抛异常，部署失败。
+
+建好之后的读取与切换：Provider 再实现 `SwitchableSitePreset`（`current()` 返回当前 slug，`apply()` 调用项目自己的切换逻辑并清缓存），
+webdeploy 网站详情「站点配置」经 `nova-admin:site-ops` 远程执行。负载与回包：
+
+```json
+{"meta":{"protocol":1},"robots_txt":"…","ads_txt":"…","presets":{"theme":"bento"}}
+__SITE_OPS_RESULT_BEGIN__{"robots_txt":{"status":"success"},"presets":{"theme":{"status":"success"}},"presets_current":{"theme":"bento"}}__SITE_OPS_RESULT_END__
+```
 
 ### 站点广告配置下发协议（webdeploy）
 

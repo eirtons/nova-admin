@@ -99,6 +99,18 @@ class SitePresetService
         return $value;
     }
 
+    /** 已登记预设的 Provider 实例 */
+    public function providerFor(string $key): SitePresetProvider
+    {
+        $definitions = $this->definitions();
+
+        if (! isset($definitions[$key])) {
+            throw new InvalidArgumentException("建站预设 [{$key}] 未在 nova-admin.site_presets 中登记");
+        }
+
+        return $this->provider($key, $definitions[$key]);
+    }
+
     private function provider(string $key, array $definition): SitePresetProvider
     {
         $provider = app($definition['provider']);

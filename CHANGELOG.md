@@ -6,6 +6,12 @@
 
 ## [未发布]
 
+## [2.7.0] - 2026-10-12
+### 新增
+- `nova-admin:site-ops {file}`：webdeploy「站点配置」下发协议，单站修改 robots.txt / ads.txt、切换建站预设，各部件独立成败，
+  回包总带 `presets_current`；只发 meta 即只读。结果 marker：`__SITE_OPS_RESULT_BEGIN__…__SITE_OPS_RESULT_END__`。
+- 接口 `SitePresets\SwitchableSitePreset`（`current()` / `apply()`）：Provider 选择实现后，webdeploy 才能读取与远程切换该预设；不实现的回 `not_applicable`。
+
 ## [2.6.0] - 2026-10-12
 ### 新增
 - 建站预设 `site_presets`：宿主登记领域 / 主题等的 `SitePresetProvider`，webdeploy 发起建站时即可下拉预选，不选仍随机。
