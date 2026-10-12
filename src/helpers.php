@@ -4,6 +4,7 @@ use Inova\NovaAdmin\Models\StaticPage;
 use Inova\NovaAdmin\Services\AdService;
 use Inova\NovaAdmin\Services\EdgeCacheService;
 use Inova\NovaAdmin\Services\SiteConfigService;
+use Inova\NovaAdmin\SitePresets\SitePresetService;
 
 if (! function_exists('site_config')) {
     function site_config(string $key, mixed $default = null): mixed
@@ -76,5 +77,16 @@ if (! function_exists('purge_edge_cache')) {
         $edgeCache->purgeLater($reason);
 
         return true;
+    }
+}
+
+if (! function_exists('site_preset')) {
+    /**
+     * 部署时为本站选定的建站预设（如 vertical / theme）；没选返回 null，由调用方走原来的随机逻辑。
+     * 选定值不在清单内时抛异常。
+     */
+    function site_preset(string $key): ?string
+    {
+        return app(SitePresetService::class)->initial($key);
     }
 }

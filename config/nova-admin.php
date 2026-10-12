@@ -339,6 +339,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | 建站预设（webdeploy 发起建站时的下拉，如垂直领域、主题）
+    |--------------------------------------------------------------------------
+    | 默认空 = 不提供下拉。宿主登记后运行 nova-admin:export-site-presets 生成 site-presets.json 并提交，
+    | doctor 校验文件与代码一致。键只能是小写字母与下划线，部署脚本把 WEBDEPLOY_PRESET_<KEY>
+    | 写进 .env 的 NOVA_PRESET_<KEY>，initial 读它；首次 seed 用 site_preset('<key>') 取值，null 时走随机。
+    |
+    | 'vertical' => [
+    |     'label'    => '垂直领域',
+    |     'provider' => App\Support\VerticalPresetProvider::class,  // 实现 SitePresetProvider
+    |     'initial'  => env('NOVA_PRESET_VERTICAL'),
+    | ],
+    */
+    'site_presets' => [],
+
+    /*
+    |--------------------------------------------------------------------------
     | 后台语言
     |--------------------------------------------------------------------------
     */

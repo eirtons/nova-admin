@@ -5,17 +5,19 @@ namespace Inova\NovaAdmin\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Inova\NovaAdmin\Services\AdService;
+use Inova\NovaAdmin\SitePresets\SitePresetService;
 
 class DoctorCommand extends Command
 {
     protected $signature = 'nova-admin:doctor {--strict : 内容位在模板里完全没有渲染点也判为失败（CI 用）}';
 
-    protected $description = '自检 nova-admin 配置一致性与模板广告渲染点';
+    protected $description = '自检 nova-admin 配置一致性、模板广告渲染点与建站预设清单';
 
     public function handle(): int
     {
         $failed = ! $this->checkProtocolMap();
         $failed = ! $this->checkTemplates() || $failed;
+        $failed = ! $this->checkSitePresets() || $failed;
 
         return $failed ? self::FAILURE : self::SUCCESS;
     }
@@ -109,6 +111,39 @@ class DoctorCommand extends Command
         }
 
         return $errors === [] && ($missing === [] || ! $this->option('strict'));
+    }
+
+    /**
+     * site-presets.json 是 webdeploy 下拉的唯一来源：与代码不一致时，部署系统里要么选不到新领域 / 主题，
+     * 要么选了项目不认识的值导致部署失败。
+     */
+    protected function checkSitePresets(): bool
+    {
+        $presets = app(SitePresetService::class);
+        $exists = is_file($presets->path());
+        $fix = '修法：运行 php artisan nova-admin:export-site-presets 并提交 '.SitePresetService::FILE.'。';
+
+        if ($presets->definitions() === []) {
+            if ($exists) {
+                $this->error('未登记建站预设，但仓库里还有 '.SitePresetService::FILE.'，webdeploy 会继续给出下拉。');
+                $this->line($fix);
+
+                return false;
+            }
+
+            return true;
+        }
+
+        if (! $exists || file_get_contents($presets->path()) !== $presets->encode()) {
+            $this->error(SitePresetService::FILE.($exists ? ' 与代码中的建站预设清单不一致。' : ' 不存在。'));
+            $this->line($fix);
+
+            return false;
+        }
+
+        $this->info('建站预设清单与代码一致（'.implode(', ', array_keys($presets->definitions())).'）。');
+
+        return true;
     }
 
     /** @return list<string> */

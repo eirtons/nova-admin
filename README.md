@@ -235,7 +235,25 @@ php artisan nova-admin:clear-sitemap-cache       # 清 sitemap 缓存
 php artisan ads:import-site-ad-config <file>    # 导入 webdeploy 下发的站点广告配置
 php artisan nova-admin:doctor [--strict]        # 自检广告位与协议映射、模板渲染点
 php artisan nova-admin:purge-edge-cache         # 立即清本站 Cloudflare 边缘缓存
+php artisan nova-admin:export-site-presets      # 生成 site-presets.json（建站预设下拉清单）
 ```
+
+### 建站预设（webdeploy 发起建站时预选领域 / 主题）
+
+首次 seed 随机分配领域或主题的项目，可以让部署系统在发起建站时直接选：
+
+1. 每组预设实现一个 `Inova\NovaAdmin\SitePresets\SitePresetProvider`（`options()`：slug ⇒ 显示名；`newOptions()`：NEW 批次 slug）。
+2. 在 `config/nova-admin.php` 登记，键只能是小写字母与下划线：
+   ```php
+   'site_presets' => [
+       'vertical' => ['label' => '垂直领域', 'provider' => VerticalPresetProvider::class, 'initial' => env('NOVA_PRESET_VERTICAL')],
+   ],
+   ```
+3. seeder 里随机的地方改成 `site_preset('vertical') ?? 原随机逻辑`。
+4. 运行 `nova-admin:export-site-presets`，提交生成的 `site-presets.json`。之后改清单不重新导出，`nova-admin:doctor` 会失败。
+
+webdeploy 每天拉取各项目 master 上的 `site-presets.json` 渲染下拉；建站时把选中值作为 `WEBDEPLOY_PRESET_<KEY>`
+传给部署脚本，脚本写进 `.env` 的 `NOVA_PRESET_<KEY>`。值不在清单内时 `site_preset()` 抛异常，部署失败。
 
 ### 站点广告配置下发协议（webdeploy）
 

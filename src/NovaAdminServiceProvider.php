@@ -19,6 +19,7 @@ use Inova\NovaAdmin\Models\StaticPage;
 use Inova\NovaAdmin\Console\Commands\ClearCacheCommand;
 use Inova\NovaAdmin\Console\Commands\CreateAdminCommand;
 use Inova\NovaAdmin\Console\Commands\DoctorCommand;
+use Inova\NovaAdmin\Console\Commands\ExportSitePresetsCommand;
 use Inova\NovaAdmin\Console\Commands\ImportSiteAdConfigCommand;
 use Inova\NovaAdmin\Console\Commands\InstallCommand;
 use Inova\NovaAdmin\Console\Commands\PurgeEdgeCacheCommand;
@@ -143,6 +144,7 @@ class NovaAdminServiceProvider extends ServiceProvider
                 ClearCacheCommand::class,
                 PurgeEdgeCacheCommand::class,
                 DoctorCommand::class,
+                ExportSitePresetsCommand::class,
             ]);
 
             $this->ensureLivewireAssetsPublished();

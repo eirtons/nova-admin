@@ -6,6 +6,13 @@
 
 ## [未发布]
 
+## [2.6.0] - 2026-10-12
+### 新增
+- 建站预设 `site_presets`：宿主登记领域 / 主题等的 `SitePresetProvider`，webdeploy 发起建站时即可下拉预选，不选仍随机。
+  - `nova-admin:export-site-presets` 生成仓库根目录 `site-presets.json`（webdeploy 每天拉取渲染下拉）。
+  - `site_preset('<key>')` 读取部署写入 `.env` 的 `NOVA_PRESET_<KEY>`：没选返回 null；不在清单内抛异常，让部署失败而不是悄悄随机。
+  - `nova-admin:doctor` 校验 `site-presets.json` 与代码一致；默认未登记，对现有项目无影响。
+
 ## [2.5.1] - 2026-10-08
 ### 修复
 - `<x-nova-seo />` 默认 canonical 保留分页参数：`/?page=2` 此前被指回 `/`，等于把分页声明成首页副本，
