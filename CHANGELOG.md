@@ -6,6 +6,15 @@
 
 ## [未发布]
 
+## [2.8.0] - 2026-10-13
+### 修复
+- 内容位广告不居中：包装层只有 `text-align:center`，管不住块级元素；GPT 渲染时在槽位里插入的固定宽度 `…__container__`、
+  广告商的固定尺寸块级代码都会贴左。`<x-ad-body>` 现在每个请求输出一次样式，给包装内的块级子元素与 GPT 容器加
+  `margin-inline:auto`；宽度 auto 的元素（AdSense 自适应 `ins`）不受影响。样式由组件输出，publish 覆盖了 `ad-slot` 视图也生效。
+### 变更
+- `ad-slot` 包装加上 `class="ad"`（居中样式靠它定位，主题也可用 `:has(.ad)` 预留高度）。已 publish 覆盖该视图的项目，
+  请在覆盖里同样保留 `class="ad"`，否则居中样式选不中。
+
 ## [2.7.0] - 2026-10-12
 ### 新增
 - `nova-admin:site-ops {file}`：webdeploy「站点配置」下发协议，单站修改 robots.txt / ads.txt、切换建站预设，各部件独立成败，

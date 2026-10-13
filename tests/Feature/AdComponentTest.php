@@ -33,6 +33,53 @@ class AdComponentTest extends TestCase
         $this->assertStringContainsString('width: 100% !important', $html);
         $this->assertStringContainsString('text-align: center !important', $html);
         $this->assertStringContainsString('<ins data-position="home_banner1"></ins>', $html);
+        $this->assertStringContainsString('class="ad"', $html);
+    }
+
+    // GPT 的固定宽度 __container__ 是块级元素，text-align 居中不了，要靠这段样式；一页只需一份
+    public function test_centering_style_is_emitted_once_per_request(): void
+    {
+        $this->fakeBody();
+
+        $html = Blade::render('<x-ad-body position="home_banner1" /><x-ad-body position="home_banner2" />');
+
+        $this->assertSame(1, substr_count($html, '<style>'));
+        $this->assertStringContainsString('.ad [id$="__container__"]{margin-left:auto!important;margin-right:auto!important}', $html);
+        $this->assertLessThan(strpos($html, 'class="ad"'), strpos($html, '<style>'));
+    }
+
+    // 浮层位自己定位，不套包装，也不需要居中样式
+    public function test_bare_body_ad_does_not_emit_centering_style(): void
+    {
+        $this->fakeBody();
+
+        $this->assertStringNotContainsString('<style>', Blade::render('<x-ad-body position="anchor" :wrapper="false" />'));
+    }
+
+    // 项目 publish 覆盖 ad-slot 视图后，居中样式仍由组件输出
+    public function test_centering_style_survives_an_overridden_slot_view(): void
+    {
+        $this->fakeBody();
+        $dir = sys_get_temp_dir().'/nova-ad-slot-'.uniqid();
+        mkdir($dir.'/components', 0777, true);
+        file_put_contents($dir.'/components/ad-slot.blade.php', '<div class="ad custom">{!! $html !!}</div>');
+        $this->app['view']->prependNamespace('nova-admin', $dir);
+
+        $html = Blade::render('<x-ad-body position="home_banner1" />');
+
+        $this->assertStringContainsString('<div class="ad custom">', $html);
+        $this->assertStringContainsString('<style>', $html);
+    }
+
+    private function fakeBody(): void
+    {
+        $this->app->instance(AdService::class, new class extends AdService
+        {
+            public function body(string $position): string
+            {
+                return '<ins data-position="'.$position.'"></ins>';
+            }
+        });
     }
 
     public function test_empty_body_ad_does_not_render_a_container(): void
