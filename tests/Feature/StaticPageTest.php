@@ -84,4 +84,14 @@ class StaticPageTest extends TestCase
 
         $this->assertSame('Hand-written description.', $page->meta_description);
     }
+
+    public function test_default_privacy_policy_meets_adsense_requirements(): void
+    {
+        // AdSense 政策要求：说明 Google 作为第三方供应商使用 Cookie 投放广告，并给出了解 / 退出的链接
+        $html = file_get_contents(__DIR__.'/../../resources/defaults/static-pages/privacy-policy.html');
+
+        $this->assertStringContainsString('Third-party vendors, including Google, also use cookies', $html);
+        $this->assertStringContainsString('https://www.google.com/settings/ads', $html);
+        $this->assertStringContainsString('https://policies.google.com/technologies/ads', $html);
+    }
 }
