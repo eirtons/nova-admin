@@ -5,6 +5,8 @@
 新增条目写在「未发布」下，打 tag 时整段移到新版本标题下。
 
 ## [未发布]
+
+## [2.8.1] - 2026-10-14
 ### 修复
 - 默认隐私政策（`resources/defaults/static-pages/privacy-policy.html`）补上 AdSense 要求的
   `https://policies.google.com/technologies/ads` 链接（How Google uses cookies in advertising）。默认文案只在 seed 时
