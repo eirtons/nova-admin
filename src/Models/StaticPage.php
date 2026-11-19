@@ -4,9 +4,11 @@ namespace Inova\NovaAdmin\Models;
 
 use Filament\Forms\Components\RichEditor\Models\Concerns\InteractsWithRichContent;
 use Filament\Forms\Components\RichEditor\Models\Contracts\HasRichContent;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Inova\NovaAdmin\Services\EdgeCacheService;
+use Inova\NovaAdmin\Services\SiteConfigService;
 
 class StaticPage extends Model implements HasRichContent
 {
@@ -51,13 +53,36 @@ class StaticPage extends Model implements HasRichContent
     }
 
     /**
-     * 前台正文：content 剥掉开头与标题重复的 H1（前台模板自行渲染 <h1>{{ $page->title }}</h1>）。
+     * 正文占位符 => 当前值。content 里存占位符、输出时替换，后台改站点设置后静态页随之变化。
+     *
+     * @return array<string, string>
+     */
+    public static function placeholders(): array
+    {
+        $config = app(SiteConfigService::class);
+
+        return [
+            '{{site_name}}'        => (string) ($config->get('site_name') ?: 'this website'),
+            '{{site_description}}' => (string) config('nova-admin.static_pages.site_description', 'an online service'),
+            '{{contact_email}}'    => (string) $config->get('contact_email', config('nova-admin.site_defaults.contact_email', '')),
+        ];
+    }
+
+    /** 标题取自正文 H1，可能含占位符，读取时替换（纯文本，由 Blade 转义）。 */
+    protected function title(): Attribute
+    {
+        return Attribute::get(fn (?string $value) => $value === null ? null : strtr($value, static::placeholders()));
+    }
+
+    /**
+     * 前台正文：content 剥掉开头与标题重复的 H1（前台模板自行渲染 <h1>{{ $page->title }}</h1>），并替换占位符。
      */
     public function getBodyHtmlAttribute(): string
     {
         $safeHtml = (string) $this->renderRichContent('content');
+        $body = trim((string) preg_replace('/^\s*<h1[^>]*>.*?<\/h1>/is', '', $safeHtml, 1));
 
-        return trim((string) preg_replace('/^\s*<h1[^>]*>.*?<\/h1>/is', '', $safeHtml, 1));
+        return strtr($body, array_map(fn (string $value) => e($value), static::placeholders()));
     }
 
     protected static function leadingH1Text(string $content): string

@@ -6,6 +6,12 @@
 
 ## [未发布]
 
+## [2.9.0] - 2026-11-18
+### 变更
+- 静态页占位符（`{{site_name}}` / `{{site_description}}` / `{{contact_email}}`）改为前台输出时替换：seed 原样入库，
+  `StaticPage::body_html` 与 `title` 读取时按当前站点设置替换（`StaticPage::placeholders()`），后台改站名、联系邮箱后静态页即时生效。
+  已有站点的正文里是 seed 时替换好的固定值，不会自动变；要跟随设置，在后台把正文里的站名 / 邮箱改回占位符即可。
+
 ## [2.8.1] - 2026-10-14
 ### 修复
 - 默认隐私政策（`resources/defaults/static-pages/privacy-policy.html`）补上 AdSense 要求的

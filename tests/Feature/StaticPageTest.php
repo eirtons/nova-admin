@@ -85,6 +85,31 @@ class StaticPageTest extends TestCase
         $this->assertSame('Hand-written description.', $page->meta_description);
     }
 
+    public function test_placeholders_follow_current_site_settings(): void
+    {
+        $config = app(\Inova\NovaAdmin\Services\SiteConfigService::class);
+        $config->set('site_name', 'Old & Co');
+        $config->set('contact_email', 'old@example.com');
+
+        $page = StaticPage::create([
+            'slug' => 'about',
+            'title' => 'About',
+            'content' => '<h1>About {{site_name}}</h1><p>{{site_name}} <a href="mailto:{{contact_email}}">{{contact_email}}</a></p>',
+            'meta_description' => 'x',
+            'is_active' => true,
+        ]);
+
+        // 占位符原样入库，后台编辑器看到的仍是占位符
+        $this->assertStringContainsString('{{contact_email}}', $page->fresh()->content);
+
+        $config->set('site_name', 'New & Co');
+        $config->set('contact_email', 'new@example.com');
+        $page = $page->fresh();
+
+        $this->assertSame('About New & Co', $page->title);
+        $this->assertSame('<p>New &amp; Co <a href="mailto:new@example.com">new@example.com</a></p>', $page->body_html);
+    }
+
     public function test_default_privacy_policy_meets_adsense_requirements(): void
     {
         // AdSense 政策要求：说明 Google 作为第三方供应商使用 Cookie 投放广告，并给出了解 / 退出的链接

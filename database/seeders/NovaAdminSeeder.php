@@ -68,27 +68,21 @@ class NovaAdminSeeder extends Seeder
             return;
         }
 
-        $config = app(SiteConfigService::class);
-        $replacements = [
-            '{{site_name}}'        => $config->get('site_name') ?: 'this website',
-            '{{site_description}}' => config('nova-admin.static_pages.site_description', 'an online service'),
-            '{{contact_email}}'    => $config->get('contact_email', config('nova-admin.site_defaults.contact_email', '')),
-        ];
-
         foreach (config('nova-admin.static_pages.presets', []) as $slug => $p) {
-            // 仅新建时预置合规模板初稿；已存在记录不覆盖用户已编辑内容
+            // 仅新建时预置合规模板初稿；已存在记录不覆盖用户已编辑内容。
+            // 占位符原样入库，由 StaticPage 输出时替换，改站点设置即生效。
             StaticPage::firstOrCreate(['slug' => $slug], [
                 'title'   => $p[0],
-                'content' => $this->staticPageTemplate($slug, $replacements),
+                'content' => $this->staticPageTemplate($slug),
             ]);
         }
     }
 
     /**
-     * 读取合规模板并替换占位符；无模板时返回 null（页面留空待编辑）。
+     * 读取合规模板（保留占位符）；无模板时返回 null（页面留空待编辑）。
      * 宿主项目 resources/defaults/static-pages/{slug}.html 优先，便于覆盖包内默认。
      */
-    protected function staticPageTemplate(string $slug, array $replacements): ?string
+    protected function staticPageTemplate(string $slug): ?string
     {
         $candidates = [
             resource_path('defaults/static-pages/'.$slug.'.html'),
@@ -97,7 +91,7 @@ class NovaAdminSeeder extends Seeder
 
         foreach ($candidates as $path) {
             if (is_file($path)) {
-                return strtr((string) file_get_contents($path), $replacements);
+                return (string) file_get_contents($path);
             }
         }
 

@@ -191,8 +191,9 @@ return [
     | 英文标签存为 title（前台展示用），中文备注仅后台标签页显示，便于辨认。
     | 后台标签页渲染为「About（关于我们）」。前台读取：static_page('about')->content。
     |
-    | 安装时读取 defaults/static-pages/{slug}.html 模板、替换占位符
-    | （{{site_name}} / {{site_description}} / {{contact_email}}）后写入 content，
+    | 安装时读取 defaults/static-pages/{slug}.html 模板写入 content，
+    | 占位符（{{site_name}} / {{site_description}} / {{contact_email}}）原样保存、
+    | 前台输出时按当前站点设置替换（StaticPage::placeholders()），改设置即生效；
     | 作为 AdSense 合规初稿（隐私政策含 Cookie / AdSense / GDPR 措辞）。
     | 模板查找顺序：宿主 resources/defaults/static-pages/ 优先，回退包内默认，
     | 故个别站点可放同名 .html 覆盖默认文案，无需改包。
