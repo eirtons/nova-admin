@@ -110,6 +110,33 @@ class StaticPageTest extends TestCase
         $this->assertSame('<p>New &amp; Co <a href="mailto:new@example.com">new@example.com</a></p>', $page->body_html);
     }
 
+    public function test_migration_restores_placeholders_from_current_settings(): void
+    {
+        $config = app(\Inova\NovaAdmin\Services\SiteConfigService::class);
+        $config->set('site_name', 'FilmHub');
+        $config->set('contact_email', 'hi@filmhub.com');
+
+        // 2.9 前 seed 写死的正文
+        $page = StaticPage::create([
+            'slug' => 'contact',
+            'title' => 'Contact',
+            'content' => '<h1>Contact</h1><p>FilmHub team: <a href="mailto:hi@filmhub.com">hi@filmhub.com</a>, see https://filmhub.com/about or FilmHubs.</p>',
+            'meta_description' => 'x',
+            'is_active' => true,
+        ]);
+        $before = $page->body_html;
+
+        (require __DIR__.'/../../database/migrations/2026_11_19_000001_restore_static_page_placeholders.php')->up();
+
+        $page = $page->fresh();
+        $this->assertSame(
+            '<h1>Contact</h1><p>{{site_name}} team: <a href="mailto:{{contact_email}}">{{contact_email}}</a>, see https://filmhub.com/about or FilmHubs.</p>',
+            $page->content,
+        );
+        // 迁移当下页面输出不变（渲染器把正文里的 @ 输出为 &#64;，解码后比较）
+        $this->assertSame(html_entity_decode($before), html_entity_decode($page->body_html));
+    }
+
     public function test_default_privacy_policy_meets_adsense_requirements(): void
     {
         // AdSense 政策要求：说明 Google 作为第三方供应商使用 Cookie 投放广告，并给出了解 / 退出的链接
