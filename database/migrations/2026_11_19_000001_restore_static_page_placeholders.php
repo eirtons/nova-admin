@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Inova\NovaAdmin\Models\StaticPage;
 
 /**
  * 2.9 前 seed 时占位符已替换成当时的值写进正文，改站点设置不会跟着变。
@@ -18,13 +17,19 @@ return new class extends Migration
             return;
         }
 
-        $values = StaticPage::placeholders();
+        // 直接查表，不走 SiteConfigService：它会把本进程读到的值缓存下来，迁移后同进程（测试、migrate --seed）再写设置会读到旧值
+        $settings = DB::table('site_configs')->whereIn('key', ['site_name', 'contact_email'])->pluck('value', 'key');
+        $values = [
+            '{{contact_email}}'    => (string) ($settings['contact_email'] ?? config('nova-admin.site_defaults.contact_email', '')),
+            '{{site_description}}' => (string) config('nova-admin.static_pages.site_description', 'an online service'),
+            '{{site_name}}'        => (string) ($settings['site_name'] ?? ''),
+        ];
 
         // 先换邮箱（可能含站名），站名放最后
         $patterns = [];
         foreach (['{{contact_email}}', '{{site_description}}', '{{site_name}}'] as $placeholder) {
             $value = trim($values[$placeholder]);
-            if ($value === '' || ($placeholder === '{{site_name}}' && $value === 'this website')) {
+            if ($value === '') {
                 continue;
             }
             // 整词匹配，且不在域名、邮箱、路径里（如站名 filmhub 不动 filmhub.com）
