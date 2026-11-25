@@ -48,7 +48,8 @@ class SitemapServiceTest extends TestCase
             ->assertHeader('Content-Type', 'application/xml; charset=UTF-8')
             ->assertHeader('X-Robots-Tag', 'noindex');
 
-        $this->assertStringContainsString('<loc>https://example.com/</loc>', $response->getContent());
+        // 首页相对路径 '/' 与 Laravel url('/') 一致，不额外追加尾斜杠
+        $this->assertStringContainsString('<loc>https://example.com</loc>', $response->getContent());
     }
 
     public function test_provider_priority_ordering_places_static_pages_last(): void
@@ -74,7 +75,7 @@ class SitemapServiceTest extends TestCase
         $locs = $this->extractLocs(Sitemap::build());
 
         $this->assertSame([
-            'https://example.com/',
+            'https://example.com',
             'https://example.com/news',
             'https://example.com/articles/a',
             'https://example.com/articles/b',
@@ -99,7 +100,7 @@ class SitemapServiceTest extends TestCase
         $xml = Sitemap::build();
 
         $this->assertSame([
-            'https://example.com/',
+            'https://example.com',
             'https://example.com/dup',
         ], $this->extractLocs($xml));
         $this->assertStringContainsString('<lastmod>2026-01-01</lastmod>', $xml);
@@ -118,7 +119,7 @@ class SitemapServiceTest extends TestCase
         // 冷缓存时即便被 IP 或异常 Host 命中，相对路径和静态页仍应产出 APP_URL 域名
         $xml = $this->get('http://127.0.0.1/sitemap.xml')->assertOk()->getContent();
 
-        $this->assertStringContainsString('<loc>https://example.com/</loc>', $xml);
+        $this->assertStringContainsString('<loc>https://example.com</loc>', $xml);
         $this->assertStringContainsString('<loc>https://example.com/about</loc>', $xml);
         $this->assertStringNotContainsString('127.0.0.1', $xml);
     }
@@ -134,7 +135,7 @@ class SitemapServiceTest extends TestCase
 
         $this->assertSame(3, $count);
         $this->assertSame([
-            'https://example.com/',
+            'https://example.com',
             'https://example.com/posts/1',
             'https://example.com/posts/2',
         ], $this->extractLocs((string) Sitemap::cachedXml()));
@@ -184,7 +185,7 @@ class SitemapServiceTest extends TestCase
         $xml = $service->xml();
 
         $this->assertSame([
-            'https://example.com/',
+            'https://example.com',
             'https://example.com/first',
         ], $this->extractLocs($xml));
         $this->assertStringEndsWith("</urlset>\n", $xml);
@@ -213,7 +214,7 @@ class SitemapServiceTest extends TestCase
         Log::shouldReceive('warning')->once();
         $xml = $service->xml();
 
-        $this->assertSame(['https://example.com/'], $this->extractLocs($xml));
+        $this->assertSame(['https://example.com'], $this->extractLocs($xml));
         $this->assertLessThanOrEqual(220, strlen($xml));
     }
 
@@ -289,7 +290,7 @@ class SitemapServiceTest extends TestCase
     {
         config(['nova-admin.sitemap.cache_store' => 'null']);
 
-        $this->assertStringContainsString('https://example.com/', Sitemap::xml());
+        $this->assertStringContainsString('<loc>https://example.com</loc>', Sitemap::xml());
         $this->assertSame(1, Sitemap::rebuild());
     }
 }

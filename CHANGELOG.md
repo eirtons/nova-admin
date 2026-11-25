@@ -6,6 +6,10 @@
 
 ## [未发布]
 
+## [2.10.1] - 2026-11-25
+### 修复
+- `SitemapService` 解析首页相对路径 `'/'` 时不再额外追加尾斜杠，保持与 Laravel 默认 `url('/')`、`route()` 及 `<x-nova-seo />` canonical 一致。
+
 ## [2.10.0] - 2026-11-25
 ### 新增
 - `Sitemap::register(callable $provider, int $priority = 0)` 支持优先级排序（越大越靠前，同级保持注册顺序）；包内激活静态页默认以 `SitemapService::STATIC_PAGES_PRIORITY`（`-100`）置后，不再排在核心业务内容之前。

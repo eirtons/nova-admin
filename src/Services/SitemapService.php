@@ -202,8 +202,9 @@ class SitemapService
 
         if (! preg_match('#^https?://#i', $loc)) {
             $appUrl = $this->appUrl();
+            $path = ltrim($loc, '/');
             $loc = $appUrl !== null
-                ? $appUrl.'/'.ltrim($loc, '/')
+                ? ($path === '' ? $appUrl : $appUrl.'/'.$path)
                 : url($loc);
         }
 
