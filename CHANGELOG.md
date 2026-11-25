@@ -6,6 +6,11 @@
 
 ## [未发布]
 
+## [2.9.3] - 2026-11-25
+### 修复
+- 后台「清空广告位」按钮改为调用 `AdSpot::clearAll()`（同步用于 `AdSpot::seedTestSpots()` 清表），
+  批量删除后手动失效 `AdService` 请求内缓存并登记清理 Cloudflare 边缘缓存。
+
 ## [2.9.2] - 2026-11-19
 ### 修复
 - 2.9.1 的 `restore_static_page_placeholders` 迁移经 `SiteConfigService` 读设置，会把本进程读到的值缓存下来，

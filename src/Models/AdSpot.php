@@ -33,7 +33,7 @@ class AdSpot extends Model
      */
     public static function seedTestSpots(): int
     {
-        static::query()->delete();
+        static::clearAll();
 
         $count = 0;
 
@@ -70,6 +70,19 @@ class AdSpot extends Model
         static::flushCaches();
 
         return $affected;
+    }
+
+    /**
+     * 清空所有广告位。返回删除条数。
+     */
+    public static function clearAll(): int
+    {
+        $deleted = static::query()->delete();
+
+        // 批量删除不触发模型事件，得手动让缓存失效
+        static::flushCaches();
+
+        return $deleted;
     }
 
     /** 广告代码直出在 HTML 里，边缘副本不清就一直是旧广告。 */

@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Inova\NovaAdmin\Models\AdSpot;
 use Inova\NovaAdmin\Models\StaticPage;
@@ -114,6 +115,24 @@ class EdgeCacheServiceTest extends TestCase
         AdSpot::create(['position' => 'home_banner1', 'head_code' => '<script></script>', 'is_active' => true]);
         AdSpot::deactivateAll();
         StaticPage::create(['slug' => 'about', 'title' => 'About', 'content' => '<p>x</p>', 'is_active' => true]);
+        Http::assertNothingSent();
+
+        $this->app->terminate();
+
+        Http::assertSentCount(1);
+    }
+
+    public function test_clearing_all_ad_spots_purges_edge_cache(): void
+    {
+        $this->fakeCloudflare();
+
+        DB::table('ad_spots')->insert([
+            'position' => 'home_banner1',
+            'body_code' => '<div>ad</div>',
+            'is_active' => true,
+        ]);
+
+        $this->assertSame(1, AdSpot::clearAll());
         Http::assertNothingSent();
 
         $this->app->terminate();

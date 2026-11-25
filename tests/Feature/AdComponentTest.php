@@ -230,6 +230,20 @@ class AdComponentTest extends TestCase
         $this->assertSame('<div>new</div>', app(AdService::class)->body('home_banner1'));
     }
 
+    public function test_clearing_all_ad_spots_flushes_ad_service_cache(): void
+    {
+        AdSpot::query()->create([
+            'position' => 'home_banner1',
+            'body_code' => '<div>old</div>',
+            'is_active' => true,
+        ]);
+
+        $this->assertSame('<div>old</div>', app(AdService::class)->body('home_banner1'));
+
+        $this->assertSame(1, AdSpot::clearAll());
+        $this->assertSame('', app(AdService::class)->body('home_banner1'));
+    }
+
     protected function fakeAds(): void
     {
         $this->app->instance(AdService::class, new class extends AdService

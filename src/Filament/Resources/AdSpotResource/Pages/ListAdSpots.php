@@ -35,7 +35,7 @@ class ListAdSpots extends ListRecords
                     ->requiresConfirmation()
                     ->modalDescription('删除全部广告位记录，不可恢复。')
                     ->action(function () {
-                        $count = AdSpot::query()->delete();
+                        $count = AdSpot::clearAll();
                         Notification::make()->title("已删除 {$count} 条广告位")->success()->send();
                     }),
             ])
