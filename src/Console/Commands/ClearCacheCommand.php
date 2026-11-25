@@ -3,6 +3,7 @@
 namespace Inova\NovaAdmin\Console\Commands;
 
 use Illuminate\Console\Command;
+use Inova\NovaAdmin\Services\EdgeCacheService;
 use Inova\NovaAdmin\Services\SitemapService;
 
 class ClearCacheCommand extends Command
@@ -11,9 +12,10 @@ class ClearCacheCommand extends Command
 
     protected $description = '清除 sitemap 缓存';
 
-    public function handle(SitemapService $sitemap): int
+    public function handle(SitemapService $sitemap, EdgeCacheService $edgeCache): int
     {
         $sitemap->forget();
+        $edgeCache->purgeUrls([$sitemap->url()], 'sitemap');
 
         $this->info('sitemap 缓存已清除。');
 

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Inova\NovaAdmin\Services\EdgeCacheService;
 use Inova\NovaAdmin\Services\SiteConfigService;
+use Inova\NovaAdmin\Services\SitemapService;
 
 class StaticPage extends Model implements HasRichContent
 {
@@ -47,9 +48,15 @@ class StaticPage extends Model implements HasRichContent
             }
         });
 
-        // 页脚的静态页链接与静态页本身都在前台整页缓存里
-        static::saved(fn () => app(EdgeCacheService::class)->purgeLater('static_pages'));
-        static::deleted(fn () => app(EdgeCacheService::class)->purgeLater('static_pages'));
+        // 页脚的静态页链接与静态页本身都在前台整页缓存与 sitemap 中
+        static::saved(function (): void {
+            app(SitemapService::class)->forget();
+            app(EdgeCacheService::class)->purgeLater('static_pages');
+        });
+        static::deleted(function (): void {
+            app(SitemapService::class)->forget();
+            app(EdgeCacheService::class)->purgeLater('static_pages');
+        });
     }
 
     /**

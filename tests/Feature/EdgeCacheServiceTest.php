@@ -64,6 +64,22 @@ class EdgeCacheServiceTest extends TestCase
             && ! isset($request['purge_everything']));
     }
 
+    public function test_purge_urls_purges_only_specific_files(): void
+    {
+        $this->fakeCloudflare();
+
+        $this->assertFalse($this->edgeCache()->purgeUrls([''], 'sitemap'));
+        $this->assertTrue($this->edgeCache()->purgeUrls([
+            'https://a.example.com/sitemap.xml',
+            'https://a.example.com/sitemap.xml',
+        ], 'sitemap'));
+
+        Http::assertSentCount(1);
+        Http::assertSent(fn ($request) => $request->url() === 'https://api.cloudflare.com/client/v4/zones/zone123/purge_cache'
+            && $request['files'] === ['https://a.example.com/sitemap.xml']
+            && ! isset($request['hosts']));
+    }
+
     public function test_resolves_zone_from_parent_domain_and_caches_it(): void
     {
         config(['nova-admin.cloudflare.zone_id' => '']);

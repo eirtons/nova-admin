@@ -264,10 +264,12 @@ return [
     |--------------------------------------------------------------------------
     | sitemap.xml
     |--------------------------------------------------------------------------
-    | robots.txt 默认模板指向 /sitemap.xml，由本包路由输出（项目自带 sitemap 时
-    | 置 enabled=false）。urls 为静态条目；动态内容在项目 ServiceProvider::boot 注册：
-    |   Sitemap::register(fn () => Article::published()->get()
+    | robots.txt 默认模板指向 /sitemap.xml，由本包路由输出（带 X-Robots-Tag: noindex；
+    | 项目自带 sitemap 时置 enabled=false）。urls 为顶部静态条目；动态内容在项目
+    | ServiceProvider::boot 注册（支持 priority 排序，越大越靠前；包内静态页默认 -100 置后）：
+    |   Sitemap::register(fn () => Article::published()->cursor()
     |       ->map(fn ($a) => ['loc' => route('articles.show', $a), 'lastmod' => $a->updated_at]));
+    | 定时预热可执行 php artisan nova-admin:build-sitemap（加锁原子覆盖缓存，无空窗）。
     */
     'sitemap' => [
         'enabled'     => true,

@@ -16,6 +16,7 @@ use Illuminate\Support\ViewErrorBag;
 use Inova\NovaAdmin\Http\Middleware\CacheablePage;
 use Inova\NovaAdmin\Http\Middleware\SecurityHeaders;
 use Inova\NovaAdmin\Models\StaticPage;
+use Inova\NovaAdmin\Console\Commands\BuildSitemapCommand;
 use Inova\NovaAdmin\Console\Commands\ClearCacheCommand;
 use Inova\NovaAdmin\Console\Commands\CreateAdminCommand;
 use Inova\NovaAdmin\Console\Commands\DoctorCommand;
@@ -142,6 +143,7 @@ class NovaAdminServiceProvider extends ServiceProvider
                 CreateAdminCommand::class,
                 SeedAdSpotsCommand::class,
                 ImportSiteAdConfigCommand::class,
+                BuildSitemapCommand::class,
                 ClearCacheCommand::class,
                 PurgeEdgeCacheCommand::class,
                 DoctorCommand::class,
@@ -280,7 +282,8 @@ class NovaAdminServiceProvider extends ServiceProvider
             Route::middleware(CacheablePage::class)
                 ->get('/sitemap.xml', function (SitemapService $svc) {
                     return response($svc->xml(), 200)
-                        ->header('Content-Type', 'application/xml; charset=UTF-8');
+                        ->header('Content-Type', 'application/xml; charset=UTF-8')
+                        ->header('X-Robots-Tag', 'noindex');
                 })->name('nova-admin.sitemap');
         }
 
@@ -309,6 +312,8 @@ class NovaAdminServiceProvider extends ServiceProvider
             ? [CacheablePage::class]
             : ['web'];
 
+        $routeName = (string) config('nova-admin.static_pages.frontend.route_name', 'pages.show');
+
         Route::middleware($middleware)
             ->get('/{staticPageSlug}', function (string $staticPageSlug) {
                 $page = static_page($staticPageSlug);
@@ -320,15 +325,19 @@ class NovaAdminServiceProvider extends ServiceProvider
                 );
             })
             ->whereIn('staticPageSlug', $slugs)
-            ->name(config('nova-admin.static_pages.frontend.route_name', 'pages.show'));
+            ->name($routeName);
 
-        // 激活的静态页自动进 sitemap
+        // 激活的静态页自动进 sitemap；法务等静态页抓取优先级低，排在业务内容之后
         $this->app->make(SitemapService::class)->register(
-            fn () => \Inova\NovaAdmin\Models\StaticPage::query()
+            fn () => StaticPage::query()
                 ->where('is_active', true)
                 ->whereIn('slug', $slugs)
-                ->get()
-                ->map(fn ($page) => ['loc' => '/'.$page->slug, 'lastmod' => $page->updated_at]),
+                ->get(['slug', 'updated_at'])
+                ->map(fn (StaticPage $page) => [
+                    'loc'     => route($routeName, $page->slug, absolute: false),
+                    'lastmod' => $page->updated_at,
+                ]),
+            SitemapService::STATIC_PAGES_PRIORITY,
         );
     }
 

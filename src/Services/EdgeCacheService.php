@@ -53,6 +53,30 @@ class EdgeCacheService
 
     public function purge(string $reason): bool
     {
+        return $this->sendPurge(fn (string $host) => ['hosts' => [$host]], $reason);
+    }
+
+    /**
+     * 只清指定 URL（如 /sitemap.xml），不波及全站其余页面的边缘缓存。
+     *
+     * @param  array<int, string>  $urls
+     */
+    public function purgeUrls(array $urls, string $reason): bool
+    {
+        $urls = array_values(array_unique(array_filter($urls, fn ($url) => is_string($url) && $url !== '')));
+
+        if ($urls === []) {
+            return false;
+        }
+
+        return $this->sendPurge(fn () => ['files' => $urls], $reason);
+    }
+
+    /**
+     * @param  callable(string): array<string, mixed>  $payload
+     */
+    protected function sendPurge(callable $payload, string $reason): bool
+    {
         if (app()->environment('local', 'testing')) {
             return false;
         }
@@ -77,7 +101,7 @@ class EdgeCacheService
 
             $response = Http::withToken($token)
                 ->timeout(10)
-                ->post(self::API."/zones/{$zoneId}/purge_cache", ['hosts' => [$host]]);
+                ->post(self::API."/zones/{$zoneId}/purge_cache", $payload($host));
 
             if ($response->successful() && $response->json('success') === true) {
                 Log::info('已清空 Cloudflare 边缘缓存', ['reason' => $reason, 'host' => $host]);

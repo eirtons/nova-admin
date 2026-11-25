@@ -206,22 +206,22 @@ Route::get('/{slug}', function (string $slug) {
 
 ### Sitemap
 
-包自带 `GET /sitemap.xml`（robots.txt 默认模板已指向它）。静态条目在 config
-`nova-admin.sitemap.urls` 配置；动态内容在项目 `AppServiceProvider::boot` 注册：
+包自带 `GET /sitemap.xml`（带 `X-Robots-Tag: noindex`，robots.txt 默认模板已指向它）。静态条目在 config
+`nova-admin.sitemap.urls` 配置；动态内容在项目 `AppServiceProvider::boot` 注册（支持 `priority` 排序，越大越靠前；激活静态页默认 `-100` 排在业务内容之后）：
 
 ```php
 use Inova\NovaAdmin\Facades\Sitemap;
 
-Sitemap::register(fn () => Article::published()->get()->map(fn ($a) => [
-    'loc'      => route('articles.show', $a),
-    'lastmod'  => $a->updated_at,          // 可选，DateTime 或字符串
-    'priority' => '0.7',                   // 可选；changefreq 同理
-]));
+Sitemap::register(fn () => Article::published()->cursor()->map(fn ($a) => [
+    'loc'     => route('articles.show', $a),
+    'lastmod' => $a->updated_at,           // 可选，DateTime 或字符串
+]), priority: 10);
 ```
 
-输出带缓存（`sitemap.cache_ttl`，默认 1800 秒），内容更新后可执行
-`php artisan nova-admin:clear-sitemap-cache` 立即刷新；项目自带 sitemap 时置
-`sitemap.enabled = false` 关闭包路由。
+输出流式拼接、自动去重，并内置并发锁与单文件 50,000 条 / 50MB 协议上限保护（HTTP 请求超限时记告警并截断，不返回 500；`rebuild()` 超限时抛异常且保留旧缓存）。
+输出带缓存（`sitemap.cache_ttl`，默认 1800 秒），定时预热或内容更新后可执行
+`php artisan nova-admin:build-sitemap`（加锁原子覆盖缓存，内容变化时仅清 `/sitemap.xml` 边缘缓存）或
+`php artisan nova-admin:clear-sitemap-cache`；项目自带 sitemap 时置 `sitemap.enabled = false` 关闭包路由。
 
 ---
 
@@ -231,7 +231,8 @@ Sitemap::register(fn () => Article::published()->get()->map(fn ($a) => [
 php artisan nova-admin:install                  # 接入 Panel、建表并初始化
 php artisan nova-admin:create-admin [--force]   # 创建/重置默认管理员
 php artisan ad:seed [--off]                     # 填充测试广告（先清空）/ 禁用广告
-php artisan nova-admin:clear-sitemap-cache       # 清 sitemap 缓存
+php artisan nova-admin:build-sitemap            # 加锁重建 sitemap 缓存（无空窗）
+php artisan nova-admin:clear-sitemap-cache      # 清 sitemap 缓存
 php artisan ads:import-site-ad-config <file>    # 导入 webdeploy 下发的站点广告配置
 php artisan nova-admin:doctor [--strict]        # 自检广告位与协议映射、模板渲染点
 php artisan nova-admin:purge-edge-cache         # 立即清本站 Cloudflare 边缘缓存

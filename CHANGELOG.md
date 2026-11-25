@@ -6,6 +6,21 @@
 
 ## [未发布]
 
+## [2.10.0] - 2026-11-25
+### 新增
+- `Sitemap::register(callable $provider, int $priority = 0)` 支持优先级排序（越大越靠前，同级保持注册顺序）；包内激活静态页默认以 `SitemapService::STATIC_PAGES_PRIORITY`（`-100`）置后，不再排在核心业务内容之前。
+- `Sitemap::rebuild(): int` 与命令 `php artisan nova-admin:build-sitemap`：通过缓存锁原子覆盖缓存（不先 `forget()`，消除冷缓存空窗与并发回源），仅在内容变化或原缓存为空时清理 Cloudflare 上的 `/sitemap.xml` 单条边缘缓存。
+- `EdgeCacheService::purgeUrls(array $urls, string $reason)`：支持按单个 URL 清理 Cloudflare 边缘缓存，不波及全站其余页面。
+
+### 变更
+- `GET /sitemap.xml` 响应头补 `X-Robots-Tag: noindex`。
+- `SitemapService` 改为流式遍历与拼接（保留 `lazy()` / `cursor()` 的省内存效果）、按 `loc` 自动去重并跳过空 `loc`、相对路径按 `config('app.url')` 解析（防止冷缓存被异常 Host 污染），并增加单文件 50,000 条 / 50MB 协议上限保护（`xml()` 记告警并截断不返 500，`rebuild()` 抛异常并保留旧缓存）。
+- 包内静态页进 sitemap 改为 `route($routeName, $page->slug, absolute: false)` 且仅查 `slug`、`updated_at` 两列，兼容尾斜杠 URL 生成器与自定义路由名。
+
+### 修复
+- `StaticPage` 保存或删除时同步清理 `SitemapService` 缓存，避免 Cloudflare 清边缘缓存后立即回源又把旧 sitemap 缓存下来。
+- `nova-admin:clear-sitemap-cache` 同步清理 Cloudflare 上的 `/sitemap.xml` 边缘缓存。
+
 ## [2.9.3] - 2026-11-25
 ### 修复
 - 后台「清空广告位」按钮改为调用 `AdSpot::clearAll()`（同步用于 `AdSpot::seedTestSpots()` 清表），
